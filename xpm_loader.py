@@ -2,7 +2,7 @@
 import re
 import sys
 
-from color import convert_color_name, convert_fullcolor_to_256
+from .color import convert_color_name, convert_fullcolor_to_256
 
 import_numpy = False
 
