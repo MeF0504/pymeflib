@@ -31,3 +31,6 @@ def chk_cmd(cmd, verbose=False):   # check the command exists.
             if verbose:
                 print('find {} ... {}'.format(cmd,  cmd_path))
             return True
+    if verbose:
+        print('command {} is not found.'.format(cmd))
+    return False
