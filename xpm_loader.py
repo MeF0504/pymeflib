@@ -4,44 +4,18 @@ import sys
 
 from .color import convert_color_name, convert_fullcolor_to_256
 
-import_numpy = False
+try:
+    import numpy as np
+except ImportError:
+    numpy_enabled = False
+else:
+    numpy_enabled = True
+
 
 class XPMLoader():
     def __init__(self, xpm_file):
-        res = ''
-        com_lines = False
-
         with open(xpm_file) as f:
-            for line in f:
-                line = line.replace("\t", " ")
-                tmpline = ''
-                for i,char in enumerate(line):
-                    if char == '/':
-                        if line[i+1] == '/':
-                            # comment line; //
-                            if not com_lines:
-                                break
-                        elif line[i+1] == '*':
-                            # comment lines; /*
-                            com_lines = True
-                        elif line[i-1] == '*':
-                            # already passed; */
-                            continue
-                        else:
-                            if not com_lines:
-                                tmpline += char
-                    elif char == '*':
-                        if line[i+1] == '/':
-                            # end of comment lines; */
-                            com_lines = False
-                        else:
-                            if not com_lines:
-                                tmpline += char
-                    else:
-                        if not com_lines:
-                            tmpline += char
-                tmpline = tmpline.replace("\n", "")
-                res += tmpline
+            res = self.remove_comments(f)
 
         res = res[res.find('{')+1:res.rfind('}')]
         res = eval("["+res+']')
@@ -53,11 +27,11 @@ class XPMLoader():
         else:
             print('{}: fail to load xpm file (color settings).'.format(xpm_file), file=sys.stderr)
             return
-        info = { \
-                'width'  : width, \
-                'height' : height, \
-                'colors' : colors, \
-                'char_per_pixel' : char_per_pixel \
+        info = {
+                'width': width,
+                'height': height,
+                'colors': colors,
+                'char_per_pixel': char_per_pixel
                 }
         # print(width, height, colors, char_per_pixel)
 
@@ -67,7 +41,7 @@ class XPMLoader():
             char = cs[:char_per_pixel]
             cs_tmp = re.split(' +', cs)
             color_settings[char] = {}
-            for i,c in enumerate(cs_tmp[1:]):
+            for i, c in enumerate(cs_tmp[1:]):
                 if c == 'c':
                     color_settings[char]['color'] = cs_tmp[i+1+1].lower()
                 elif c == 's':
@@ -88,6 +62,41 @@ class XPMLoader():
         self.color_settings = color_settings
         self.body = body
 
+    def remove_comments(fileobj):
+        res = ''
+        com_lines = False
+        for line in fileobj:
+            line = line.replace("\t", " ")
+            tmpline = ''
+            for i, char in enumerate(line):
+                if char == '/':
+                    if line[i+1] == '/':
+                        # comment line; //
+                        if not com_lines:
+                            break
+                    elif line[i+1] == '*':
+                        # comment lines; /*
+                        com_lines = True
+                    elif line[i-1] == '*':
+                        # already passed; */
+                        continue
+                    else:
+                        if not com_lines:
+                            tmpline += char
+                elif char == '*':
+                    if line[i+1] == '/':
+                        # end of comment lines; */
+                        com_lines = False
+                    else:
+                        if not com_lines:
+                            tmpline += char
+                else:
+                    if not com_lines:
+                        tmpline += char
+            tmpline = tmpline.replace("\n", "")
+            res += tmpline
+        return res
+
     def get_color_settings_full(self):
         color_setting = self.color_settings
         color_settings_full = {}
@@ -105,13 +114,9 @@ class XPMLoader():
         self.color_settings_full = color_settings_full
 
     def xpm_to_ndarray(self):
-        global import_numpy
-        if not import_numpy:
-            import numpy as np
-            import_numpy = True
-
+        if not numpy_enabled:
+            return False
         self.get_color_settings_full()
-
         width = self.info['width']
         height = self.info['height']
         cpp = self.info['char_per_pixel']
@@ -127,13 +132,16 @@ class XPMLoader():
                     r = int(col_id[1:3], 16)
                     g = int(col_id[3:5], 16)
                     b = int(col_id[5:7], 16)
-                    data[i][j] = [r,g,b, 255]
+                    data[i][j] = [r, g, b, 255]
 
         self.ndarray = data
+        return True
 
     def get_vim_setings(self, gui=True):
-        if gui: term = 'gui'
-        else: term = 'cterm'
+        if gui:
+            term = 'gui'
+        else:
+            term = 'cterm'
 
         match_cluster = 'syntax cluster Xpmcolors contains='
         if gui:
@@ -143,7 +151,7 @@ class XPMLoader():
             color_setting = self.color_settings_full
 
         self.vim_settings = []
-        for i,char in enumerate(color_setting):
+        for i, char in enumerate(color_setting):
             self.vim_settings.append({})
             if gui:
                 col = color_setting[char]['color'].upper()
@@ -151,7 +159,7 @@ class XPMLoader():
                 col = color_setting[char].upper()
             if col == 'NONE':
                 # get Normal highlight if possible.
-                hi_cmd  = 'try | '
+                hi_cmd = 'try | '
                 hi_cmd += 'highlight link Xpmcolor{:d} Normal | '.format(i)
                 hi_cmd += 'highlight Xpmcolor{:d} {}fg=bg | '.format(i, term)
                 hi_cmd += 'catch | '
@@ -177,8 +185,8 @@ class XPMLoader():
         match_cluster = match_cluster[:-1]
         self.vim_finally = match_cluster
 
+
 if __name__ == '__main__':
-    import sys
     import matplotlib.pyplot as plt
     xpm_file = sys.argv[1]
     XPM = XPMLoader(xpm_file)
