@@ -62,7 +62,7 @@ class XPMLoader():
         self.color_settings = color_settings
         self.body = body
 
-    def remove_comments(fileobj):
+    def remove_comments(self, fileobj):
         res = ''
         com_lines = False
         for line in fileobj:
@@ -106,7 +106,8 @@ class XPMLoader():
             elif color_setting[char]['color'].startswith('#'):
                 color_settings_full[char] = color_setting[char]['color']
             else:
-                color_full = convert_color_name(color_setting[char]['color'], 'full', True)
+                color_full = convert_color_name(color_setting[char]['color'],
+                                                'full', True)
                 if color_full is None:
                     color_full = '#000000'
                 color_settings_full[char] = color_full
@@ -198,4 +199,3 @@ if __name__ == '__main__':
     ax.set_xticks([])
     ax.set_yticks([])
     plt.show()
-
