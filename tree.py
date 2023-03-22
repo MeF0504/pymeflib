@@ -15,6 +15,7 @@ class tree_viewer():
         self.cpath = None   # current path
         self.cnt = 0
         self.is_finish = False
+        self.maxcnt = 20
 
     def __iter__(self):
         return self
@@ -22,7 +23,7 @@ class tree_viewer():
     def __next__(self):
         if debug:
             print('\n__next__ start')
-        if self.is_finish or (self.cnt == -1):
+        if self.is_finish or (self.cnt == self.maxcnt):
             if debug:
                 print('finish: cur:{}, cnt:{}'.format(self.cpath, self.cnt))
             raise StopIteration()
@@ -89,7 +90,7 @@ class tree_viewer():
                 print('get_contents @ {}'.format(path))
             tree_list = self.tree
             for p in path.parts:
-                if (str(p) == self.root):
+                if False:  # (str(p) == self.root):  # what is this for?
                     continue
                 else:
                     tree_list = tree_list[0][str(p)]
