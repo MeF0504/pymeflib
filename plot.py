@@ -36,6 +36,7 @@ def share_plot(fig: plt.Figure,
 def add_1_colorbar(fig: plt.Figure,
                    image: mpl.image.AxesImage,
                    rect=[0.91, 0.1, 0.02, 0.8],
+                   **kwargs,
                    ):
     '''
     plot a colorbar in the figure.
@@ -49,13 +50,15 @@ def add_1_colorbar(fig: plt.Figure,
         return value of plt.plot, plt.imshow etc.
     rect: sequence of float
         The dimensions [left, bottom, width, height] of the colorbar.
+    **kwargs:
+        options to pass to fig.colorbar.
 
     Returns
     -------
     None
     '''
     cax = fig.add_axes(rect)
-    fig.colorbar(image, cax=cax)
+    fig.colorbar(image, cax=cax, **kwargs)
 
 
 def rotate_labels(axes: plt.Axes, angle: float, labels, axis='x'):
