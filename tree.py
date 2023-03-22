@@ -4,8 +4,9 @@ import os
 from pathlib import PurePath
 
 debug = False
-branch_str  = '|__ '
+branch_str = '|__ '
 branch_str2 = '|   '
+
 
 class tree_viewer():
     def __init__(self, tree_list, root):
@@ -34,13 +35,14 @@ class tree_viewer():
         else:
             # other directories
             files, dirs = self.get_contents(self.cpath)
-            if (str(self.cpath)=='.') and (len(dirs)==0):
+            if (str(self.cpath) == '.') and (len(dirs) == 0):
                 self.is_finish = True
             if len(dirs) != 0:
                 # go to a directory in this directory
                 if debug:
                     print('pattern 2 @ {}'.format(self.cpath))
-                    print('from {}, to dirs:{}[0]'.format(self.cpath.name, dirs))
+                    print('from {}, to dirs:{}[0]'.format(self.cpath.name,
+                                                          dirs))
                 self.cpath /= dirs[0]
             else:
                 # no dirs in this directory
@@ -49,7 +51,8 @@ class tree_viewer():
                     files, dirs = self.get_contents(par)
                     if debug:
                         print('pattern 3 @ {}->{}'.format(self.cpath, par))
-                        print('parent:{}, dirs:{}'.format(self.cpath.parent, dirs))
+                        print('parent:{}, dirs:{}'.format(self.cpath.parent,
+                                                          dirs))
                     index = dirs.index(self.cpath.name)+1
                     if index < len(dirs):
                         # not a last directory in parent directory
@@ -62,7 +65,7 @@ class tree_viewer():
                         self.cpath = self.cpath.parent
                         if debug:
                             print('continue; cpath:{}, index:{}'.format(self.cpath, index))
-                        if (str(self.cpath)=='.') and (index>=len(dirs)):
+                        if (str(self.cpath) == '.') and (index >= len(dirs)):
                             # at root directory and no contents after this
                             if debug:
                                 print('is_finish')
@@ -74,7 +77,7 @@ class tree_viewer():
     def get_contents(self, path):
         if self.is_finish:
             return None, None
-        if type(path) != type(PurePath('.')):
+        if type(path) != PurePath:
             path = PurePath(path)
 
         if str(path) == '.':
@@ -86,8 +89,10 @@ class tree_viewer():
                 print('get_contents @ {}'.format(path))
             tree_list = self.tree
             for p in path.parts:
-                if (str(p)==self.root): continue
-                else: tree_list = tree_list[0][str(p)]
+                if (str(p) == self.root):
+                    continue
+                else:
+                    tree_list = tree_list[0][str(p)]
         if debug:
             print('get tree_list:{}'.format(tree_list))
 
@@ -99,6 +104,7 @@ class tree_viewer():
         dirs.sort()
 
         return files, dirs
+
 
 def show_contents(root, cpath, files, dirs, add_info=None):
     if str(cpath) == '.':
@@ -118,14 +124,17 @@ def show_contents(root, cpath, files, dirs, add_info=None):
             add_info_str = add_info(root/cpath)
 
         dnum = str(cpath).count(os.sep)
-        print('{}{}{}/{}'.format(branch_str2*(dnum), branch_str, cpath.name, add_info_str))
+        print('{}{}{}/{}'.format(branch_str2*(dnum), branch_str,
+                                 cpath.name, add_info_str))
         for f in files:
             if add_info is None:
                 add_info_str = ''
             else:
                 add_info_str = add_info(root/cpath/f)
 
-            print('{}{}{}{}'.format(branch_str2*(dnum+1), branch_str, f, add_info_str))
+            print('{}{}{}{}'.format(branch_str2*(dnum+1), branch_str,
+                                    f, add_info_str))
+
 
 def show_tree(tree, root='.', add_info=None):
     tree_view = tree_viewer(tree, root)
@@ -134,6 +143,7 @@ def show_tree(tree, root='.', add_info=None):
             print(cpath, files, dirs)
         if (files is not None) and (dirs is not None):
             show_contents(root, cpath, files, dirs, add_info)
+
 
 def get_list(tree, root='.'):
     tree_view = tree_viewer(tree, root)
@@ -146,20 +156,23 @@ def get_list(tree, root='.'):
                 res_files.append(str(root/cpath/f))
     return res_files, res_dirs
 
+
 if __name__ == '__main__':
-    test_data = [\
-            { \
-            'dir2':[ \
-                { \
-                'dir3':[ \
-                    {}, 'file3-1'], \
-                'dir4':[ \
-                    {}, 'file4-1']}, \
-                'file2-1', 'file2-2',], \
-            'dir5':[ \
-                {}, 'file5-1'], \
-            }, \
-            'file1-1',]
+    test_data = [
+            {
+                'dir2': [
+                    {
+                        'dir3': [
+                            {}, 'file3-1'],
+                        'dir4': [
+                            {}, 'file4-1']},
+                        'file2-1', 'file2-2',
+                        ],
+                'dir5': [
+                    {}, 'file5-1'],
+            },
+            'file1-1',
+            ]
     if debug:
         print(test_data)
     show_tree(test_data, 'dir1')
@@ -176,4 +189,3 @@ if __name__ == '__main__':
     |__ dir5/
     |   |__ file5-1
     '''
-
