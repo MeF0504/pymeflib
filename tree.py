@@ -15,7 +15,7 @@ class tree_viewer():
         self.cpath = None   # current path
         self.cnt = 0
         self.is_finish = False
-        self.maxcnt = 20
+        self.maxcnt = -1
 
     def __iter__(self):
         return self
