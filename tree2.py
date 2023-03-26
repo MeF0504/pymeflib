@@ -110,11 +110,6 @@ class TreeViewer():
                 cur_dir = tmp_path.name
                 tmp_path = tmp_path.parent
                 self.debugprint('@ {}'.format(tmp_path.parts))
-                if self.is_root(tmp_path):
-                    # root
-                    self.debugprint('reached the root.')
-                    self.finish = True
-                    break
                 tmp_dirs, tmp_files = self.get_contents(self.root, tmp_path)
                 self.debugprint('find {} in {}'.format(cur_dir, tmp_dirs))
                 if cur_dir in tmp_dirs:
@@ -123,6 +118,11 @@ class TreeViewer():
                         self.nextpath = tmp_path/tmp_dirs[idx+1]
                         self.debugprint('next path: {}'.format(self.nextpath))
                         break
+                    else:
+                        if self.is_root(tmp_path):
+                            self.debugprint('reached the last dir of root.')
+                            self.finish = True
+                            break
                 else:
                     self.debugprint('{}, {}'.format(tmp_path, tmp_dirs))
                     print('something wrong.')
