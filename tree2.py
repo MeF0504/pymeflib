@@ -97,6 +97,7 @@ class TreeViewer():
             self.cpath = self.nextpath
             self.debugprint('set cpath: {}'.format(self.cpath))
         dirs, files = self.get_contents(self.root, self.cpath)
+        # self.debugprint('{} {}'.format(dirs, files))
 
         # search next path.
         if dirs:
@@ -106,27 +107,31 @@ class TreeViewer():
         else:
             # go up
             tmp_path = self.cpath
-            while True:
-                cur_dir = tmp_path.name
-                tmp_path = tmp_path.parent
-                self.debugprint('@ {}'.format(tmp_path.parts))
-                tmp_dirs, tmp_files = self.get_contents(self.root, tmp_path)
-                self.debugprint('find {} in {}'.format(cur_dir, tmp_dirs))
-                if cur_dir in tmp_dirs:
-                    idx = tmp_dirs.index(cur_dir)
-                    if idx+1 < len(tmp_dirs):
-                        self.nextpath = tmp_path/tmp_dirs[idx+1]
-                        self.debugprint('next path: {}'.format(self.nextpath))
-                        break
-                    else:
-                        if self.is_root(tmp_path):
-                            self.debugprint('reached the last dir of root.')
-                            self.finish = True
+            if self.is_root(tmp_path):
+                # no sub directories?
+                self.finish = True
+            else:
+                while True:
+                    cur_dir = tmp_path.name
+                    tmp_path = tmp_path.parent
+                    self.debugprint('@ {}'.format(tmp_path.parts))
+                    tmp_dirs, tmp_files = self.get_contents(self.root, tmp_path)
+                    self.debugprint('find {} in {}'.format(cur_dir, tmp_dirs))
+                    if cur_dir in tmp_dirs:
+                        idx = tmp_dirs.index(cur_dir)
+                        if idx+1 < len(tmp_dirs):
+                            self.nextpath = tmp_path/tmp_dirs[idx+1]
+                            self.debugprint('next path: {}'.format(self.nextpath))
                             break
-                else:
-                    self.debugprint('{}, {}'.format(tmp_path, tmp_dirs))
-                    print('something wrong.')
-                    raise StopIteration()
+                        else:
+                            if self.is_root(tmp_path):
+                                self.debugprint('reached the last dir of root.')
+                                self.finish = True
+                                break
+                    else:
+                        self.debugprint('{}, {}'.format(tmp_path, tmp_dirs))
+                        print('something wrong.')
+                        raise StopIteration()
         self.debugprint('return {}, {}, {}'.format(self.cpath, dirs, files))
         return self.cpath, dirs, files
 
