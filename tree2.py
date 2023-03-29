@@ -19,14 +19,11 @@ class TreeViewer():
         a root path of the tree.
     get_contents: Callable
         a function to get contents of the given path.
-        This function takes two arguments and return directories and files
+        This function takes one argument and return directories and files
         of an any path.
 
         Parameters
         ----------
-        root: string
-            a root path of the tree.
-            The root variable of TreeViewer is passed.
         path: string
             a relative path in the tree.
 
@@ -73,7 +70,7 @@ class TreeViewer():
     """
 
     def __init__(self, root: str,
-                 get_contents: Callable[[str, str], str]) -> None:
+                 get_contents: Callable[[str], list]) -> None:
         self.root = PurePath(root)    # root path
         self.cpath = PurePath('.')   # current path (relative)
         self.nextpath = None
@@ -96,7 +93,7 @@ class TreeViewer():
         if self.nextpath is not None:
             self.cpath = self.nextpath
             self.debugprint('set cpath: {}'.format(self.cpath))
-        dirs, files = self.get_contents(self.root, self.cpath)
+        dirs, files = self.get_contents(self.cpath)
         # self.debugprint('{} {}'.format(dirs, files))
 
         # search next path.
@@ -115,7 +112,7 @@ class TreeViewer():
                     cur_dir = tmp_path.name
                     tmp_path = tmp_path.parent
                     self.debugprint('@ {}'.format(tmp_path.parts))
-                    tmp_dirs, tmp_files = self.get_contents(self.root, tmp_path)
+                    tmp_dirs, tmp_files = self.get_contents(tmp_path)
                     self.debugprint('find {} in {}'.format(cur_dir, tmp_dirs))
                     if cur_dir in tmp_dirs:
                         idx = tmp_dirs.index(cur_dir)
@@ -150,7 +147,7 @@ class TreeViewer():
 
     def show(self, add_info=None):
         fullpath = self.root/self.cpath
-        dirs, files = self.get_contents(self.root, self.cpath)
+        dirs, files = self.get_contents(self.cpath)
         self.debugprint('show: {} !!'.format(self.cpath.parts))
         if self.is_root():
             # root
@@ -181,7 +178,7 @@ class TreeViewer():
                                         f, add_info_str))
 
 
-def show_tree(root: str, get_contents: Callable[[str, str], str],
+def show_tree(root: str, get_contents: Callable[[str], list],
               add_info=None) -> None:
     tree_view = TreeViewer(root, get_contents)
     for cpath, dirs, files in tree_view:
@@ -190,6 +187,7 @@ def show_tree(root: str, get_contents: Callable[[str, str], str],
 
 if __name__ == '__main__':
     from pathlib import Path
+    from functools import partial
 
     def get_contents(root, cpath):
         fullpath = Path(root)/cpath
@@ -202,4 +200,4 @@ if __name__ == '__main__':
                 dirs.append(f.name)
         return dirs, files
 
-    show_tree('.', get_contents)
+    show_tree('.', partial(get_contents, '.'))
