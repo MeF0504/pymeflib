@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 def share_plot(fig: plt.Figure,
                row: int, col: int,
-               rect=[0.15, 0.12, 0.10, 0.05]):
+               rect=[0.15, 0.12, 0.10, 0.05]) -> plt.Axes:
     '''
     make axes that sharing x-axis and y-axis.
 
@@ -37,7 +37,7 @@ def add_1_colorbar(fig: plt.Figure,
                    image: mpl.image.AxesImage,
                    rect=[0.91, 0.1, 0.02, 0.8],
                    **kwargs,
-                   ):
+                   ) -> None:
     '''
     plot a colorbar in the figure.
 
@@ -61,7 +61,7 @@ def add_1_colorbar(fig: plt.Figure,
     fig.colorbar(image, cax=cax, **kwargs)
 
 
-def rotate_labels(axes: plt.Axes, angle: float, labels, axis='x'):
+def rotate_labels(axes: plt.Axes, angle: float, labels, axis='x') -> None:
     '''
     rotate the labels
 
