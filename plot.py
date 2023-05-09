@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -89,3 +90,27 @@ def rotate_labels(axes: plt.Axes, angle: float, labels, axis='x') -> None:
     elif axis == 'y':
         axes.set_yticklabels(labels, ha='right')
         plt.setp(axes.get_xticklabels(), rotation=angle)
+
+
+def change_im_aspect(X: np.ndarray, axes: plt.Axes, aspect: float = 1.0,
+                     **kwargs) -> mpl.image.AxesImage:
+    '''
+    display data as an image at given aspect ratio.
+
+    Parameters
+    ----------
+    X: array-like or PIL image
+        this is passed to the matplotlib.pyplot.imshow.
+    aspect: the aspect ratio of the image.
+        vertical length over horizontal length.
+    kwargs: key ward arguments to pass to matplotlib.pyplot.imshow.
+
+    Returns
+    -------
+    img: the returned value of matplotlib.pyplot.imshow.
+    '''
+
+    leny, lenx = X.shape[:2]
+    img_asp = float(leny)/lenx
+    ret_asp = 1.0/img_asp*aspect
+    return axes.imshow(X, aspect=ret_asp, **kwargs)
