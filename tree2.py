@@ -163,13 +163,14 @@ class TreeViewer():
                                         f, add_info_post))
         else:
             if add_info is None:
-                add_info_str = ''
+                add_info_pre, add_info_post = ['', '']
             else:
-                add_info_str = add_info(fullpath)
+                add_info_pre, add_info_post = add_info(fullpath)
 
             dnum = len(self.cpath.parts)-1
-            print('{}{}{}/{}'.format(branch_str2*(dnum), branch_str,
-                                     self.cpath.name, add_info_str))
+            print('{}{}{}{}/{}'.format(branch_str2*(dnum), branch_str,
+                                       add_info_pre, self.cpath.name,
+                                       add_info_post))
             for f in files:
                 if add_info is None:
                     add_info_str = ''
