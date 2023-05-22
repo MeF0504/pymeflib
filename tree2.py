@@ -173,12 +173,12 @@ class TreeViewer():
                                        add_info_post))
             for f in files:
                 if add_info is None:
-                    add_info_str = ''
+                    add_info_pre, add_info_post = ['', '']
                 else:
-                    add_info_str = add_info(fullpath/f)
+                    add_info_pre, add_info_post = add_info(fullpath/f)
 
-                print('{}{}{}{}'.format(branch_str2*(dnum+1), branch_str,
-                                        f, add_info_str))
+                print('{}{}{}{}{}'.format(branch_str2*(dnum+1), branch_str,
+                                          add_info_pre, f, add_info_post))
 
 
 def show_tree(root: str, get_contents: Callable[[str], list],
