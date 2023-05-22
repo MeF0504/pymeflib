@@ -1,7 +1,7 @@
 # library that supports to show files in tree form.
 
 from pathlib import PurePath
-from typing import Callable
+from typing import Callable, Union
 
 branch_str = '|__ '
 branch_str2 = '|   '
@@ -145,7 +145,8 @@ class TreeViewer():
         else:
             return True
 
-    def show(self, add_info=None):
+    def show(self,
+             add_info: Union[Callable[[str], list], None] = None) -> None:
         fullpath = self.root/self.cpath
         dirs, files = self.get_contents(self.cpath)
         self.debugprint('show: {} !!'.format(self.cpath.parts))
@@ -154,11 +155,12 @@ class TreeViewer():
             print('{}/'.format(self.root))
             for f in files:
                 if add_info is None:
-                    add_info_str = ''
+                    add_info_pre, add_info_post = ['', '']
                 else:
-                    add_info_str = add_info(fullpath/f)
+                    add_info_pre, add_info_post = add_info(fullpath/f)
 
-                print('{}{}{}'.format(branch_str, f, add_info_str))
+                print('{}{}{}{}'.format(branch_str, add_info_pre,
+                                        f, add_info_post))
         else:
             if add_info is None:
                 add_info_str = ''
