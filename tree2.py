@@ -1,7 +1,7 @@
 # library that supports to show files in tree form.
 
 from pathlib import PurePath
-from typing import Callable, Union
+from typing import Callable, Optional
 
 branch_str = '|__ '
 branch_str2 = '|   '
@@ -70,7 +70,8 @@ class TreeViewer():
     """
 
     def __init__(self, root: str,
-                 get_contents: Callable[[str], list]) -> None:
+                 get_contents: Callable[[str],
+                                        tuple[list[str], list[str]]]) -> None:
         self.root = PurePath(root)    # root path
         self.cpath = PurePath('.')   # current path (relative)
         self.nextpath = None
@@ -83,7 +84,7 @@ class TreeViewer():
     def __iter__(self) -> None:
         return self
 
-    def __next__(self) -> list:
+    def __next__(self) -> tuple[str, list[str], list[str]]:
         if self.finish:
             raise StopIteration()
         self.cnt += 1
@@ -136,7 +137,7 @@ class TreeViewer():
         if self.debug:
             print(msg)
 
-    def is_root(self, path: PurePath = None) -> bool:
+    def is_root(self, path: Optional[PurePath] = None) -> bool:
         if path is None:
             path = self.cpath
         self.debugprint('root? {}'.format(path.parts))
@@ -146,7 +147,7 @@ class TreeViewer():
             return True
 
     def show(self,
-             add_info: Union[Callable[[str], list], None] = None) -> None:
+             add_info: Optional[Callable[[str], list[str]]] = None) -> None:
         fullpath = self.root/self.cpath
         dirs, files = self.get_contents(self.cpath)
         self.debugprint('show: {} !!'.format(self.cpath.parts))
@@ -181,7 +182,8 @@ class TreeViewer():
                                           add_info_pre, f, add_info_post))
 
 
-def show_tree(root: str, get_contents: Callable[[str], list],
+def show_tree(root: str, get_contents: Callable[[str],
+                                                tuple[list[str], list[str]]],
               add_info=None) -> None:
     tree_view = TreeViewer(root, get_contents)
     for cpath, dirs, files in tree_view:
