@@ -70,7 +70,7 @@ class TreeViewer():
     """
 
     def __init__(self, root: str,
-                 get_contents: Callable[[str],
+                 get_contents: Callable[[PurePath],
                                         tuple[list[str], list[str]]]) -> None:
         self.root = PurePath(root)    # root path
         self.cpath = PurePath('.')   # current path (relative)
@@ -182,7 +182,7 @@ class TreeViewer():
                                           add_info_pre, f, add_info_post))
 
 
-def show_tree(root: str, get_contents: Callable[[str],
+def show_tree(root: str, get_contents: Callable[[PurePath],
                                                 tuple[list[str], list[str]]],
               add_info=None) -> None:
     tree_view = TreeViewer(root, get_contents)
