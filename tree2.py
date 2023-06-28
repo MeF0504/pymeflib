@@ -12,7 +12,6 @@ AddInfo = Optional[Callable[[Union[str, PurePath]], list[str]]]
 
 class TreeViewer():
     """
-    TreeViewer(root, get_contents)
 
     class to treat the path-like contents
 
@@ -82,7 +81,7 @@ class TreeViewer():
         self.maxcnt = -1
         self.debug = False
 
-    def __iter__(self):
+    def __iter__(self) -> "TreeViewer":
         return self
 
     def __next__(self) -> tuple[PurePath, list[str], list[str]]:
