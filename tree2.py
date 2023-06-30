@@ -84,7 +84,7 @@ class TreeViewer():
     def __iter__(self) -> "TreeViewer":
         return self
 
-    def __next__(self) -> tuple[PurePath, List[str], List[str]]:
+    def __next__(self) -> Tuple[PurePath, List[str], List[str]]:
         if self.finish:
             raise StopIteration()
         self.cnt += 1
