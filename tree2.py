@@ -7,7 +7,7 @@ branch_str = '|__ '
 branch_str2 = '|   '
 
 GC = Callable[[PurePath], Tuple[List[str], List[str]]]
-AddInfo = Optional[Callable[[Union[str, PurePath]], list[str]]]
+AddInfo = Optional[Callable[[Union[str, PurePath]], List[str]]]
 
 
 class TreeViewer():
@@ -84,7 +84,7 @@ class TreeViewer():
     def __iter__(self) -> "TreeViewer":
         return self
 
-    def __next__(self) -> tuple[PurePath, list[str], list[str]]:
+    def __next__(self) -> tuple[PurePath, List[str], List[str]]:
         if self.finish:
             raise StopIteration()
         self.cnt += 1
