@@ -23,7 +23,8 @@ def share_plot(fig: plt.Figure,
 
     Returns
     -------
-    axes: sequence of axes
+    axes: Axes
+        sequence of axes
     '''
     width = (1-rect[0]-rect[2])/col
     height = (1-rect[1]-rect[3])/row
@@ -110,7 +111,8 @@ def change_im_aspect(X: np.ndarray, axes: plt.Axes, aspect: float = 1.0,
 
     Returns
     -------
-    img: the returned value of matplotlib.pyplot.imshow.
+    img: AxesImage
+        the returned value of matplotlib.pyplot.imshow.
     '''
 
     leny, lenx = X.shape[:2]
