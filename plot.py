@@ -1,6 +1,8 @@
 '''
 Templates for matplotlib.
 '''
+from typing import Optional
+
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -119,3 +121,35 @@ def change_im_aspect(X: np.ndarray, axes: plt.Axes, aspect: float = 1.0,
     img_asp = float(leny)/lenx
     ret_asp = 1.0/img_asp*aspect
     return axes.imshow(X, aspect=ret_asp, **kwargs)
+
+
+def get_fig_w_pixels(xpixel: int, ypixel: int,
+                     dpi: Optional[float] = None,
+                     *args, **kwargs) -> plt.Figure:
+    """
+    create a figure with any pixel values.
+
+    Parameters
+    ----------
+    xpixel, ypixel: int
+        Pixel values of each axis.
+
+    dpi Optional[float]
+        Dot per inch for the figure. If None is set, use the default value.
+
+    args:
+        arguments passed to the plt.figure.
+
+    kwargs:
+        keyword arguments passed to the plt.figure.
+
+    Returns
+    -------
+    figure: Figure
+        the created Figure object
+    """
+    if dpi is None:
+        dpi = plt.rcParams['figure.dpi']
+    figx = xpixel/dpi
+    figy = ypixel/dpi
+    return plt.figure(figsize=(figx, figy), dpi=dpi, *args, **kwargs)
