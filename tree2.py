@@ -1,13 +1,16 @@
 # library that supports to show files in tree form.
 
-from pathlib import PurePath
-from typing import Callable, Optional, Union, Tuple, List
+from pathlib import PurePath, PurePosixPath, PureWindowsPath
+from typing import Callable, Optional, Union, Tuple, List, Type
 
 branch_str = '|__ '
 branch_str2 = '|   '
 
 GC = Callable[[PurePath], Tuple[List[str], List[str]]]
 AddInfo = Optional[Callable[[Union[str, PurePath]], List[str]]]
+PPath = Union[Type[PurePath],
+              Type[PurePosixPath],
+              Type[PureWindowsPath]]
 
 
 class TreeViewer():
@@ -37,6 +40,9 @@ class TreeViewer():
         files: list of string
             a list of files. In this context, "file" means a path that
             itself have a information.
+
+    purepath: PurePath or PurePosixPath or PureWindowsPath
+        a variable to specify the used PurePath class.
 
     Methods
     ----------
@@ -71,9 +77,11 @@ class TreeViewer():
 
     """
 
-    def __init__(self, root: str, get_contents: GC) -> None:
-        self.root = PurePath(root)    # root path
-        self.cpath = PurePath('.')   # current path (relative)
+    def __init__(self, root: str, get_contents: GC,
+                 purepath: PPath = PurePath) -> None:
+        assert purepath in [PurePath, PurePosixPath, PureWindowsPath]
+        self.root = purepath(root)    # root path
+        self.cpath = purepath('.')   # current path (relative)
         self.nextpath: Optional[PurePath] = None
         self.cnt = 0
         self.finish = False
@@ -181,8 +189,9 @@ class TreeViewer():
                                           add_info_pre, f, add_info_post))
 
 
-def show_tree(root: str, get_contents: GC, add_info: AddInfo = None) -> None:
-    tree_view = TreeViewer(root, get_contents)
+def show_tree(root: str, get_contents: GC,
+              add_info: AddInfo = None, purepath: PPath = PurePath) -> None:
+    tree_view = TreeViewer(root, get_contents, purepath)
     for cpath, dirs, files in tree_view:
         tree_view.show(add_info)
 
