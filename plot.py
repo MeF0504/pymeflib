@@ -157,3 +157,56 @@ def get_fig_w_pixels(xpixel: int, ypixel: int,
     if 'dpi' in kwargs:
         del kwargs['dpi']
     return plt.figure(figsize=(figx, figy), dpi=dpi, *args, **kwargs)
+
+
+def make_table(axes: plt.Axes, data: np.ndarray,
+               colLabels: List[str], rowLabels: List[str],
+               color: Optional[np.ndarray] = None,
+               cellLoc: Literal['left', 'center', 'right'] = 'center',
+               colLoc: Literal['left', 'center', 'right'] = 'right',
+               rowLoc: Literal['left', 'center', 'right'] = 'center',
+               ) -> None:
+    """
+    create a (looks natural) table image using matplotlib.
+
+    Parameters
+    ----------
+    axes: matplotlib.pyplot.Axes
+        An axes object that is uesd to create the table.
+    data: 2D-ndarray
+        The data shown in the table. The shape should be (n_row, n_col).
+
+    colLabels: list of strings
+        A list of strings shown at the first collum of the table.
+        The length should be same as n_col.
+
+    rowLabels: list of strings
+        A list of strings shown at the first row of the table.
+        The length should be same as n_row.
+
+    color: 2D-list of colors or None
+        2D list of background colors of the cells.
+
+    cellLoc: 'left', 'center' or 'right'
+        The alignment of the text within the cells.
+
+    colLoc: 'left', 'center' or 'right'
+        The text alignment of the column header cells.
+
+    rowLoc: 'left', 'center' or 'right'
+        The text alignment of the row header cells.
+
+    Returns
+    -------
+    None
+    """
+    assert data.shape[0] == len(rowLabels)
+    assert data.shape[1] == len(colLabels)
+
+    axes.axis('off')
+    table = axes.table(cellText=data, loc='center',
+                       colLabels=colLabels, rowLabels=rowLabels,
+                       cellColours=color, cellLoc=cellLoc,
+                       colLoc=colLoc, rowLoc=rowLoc)
+    for pos, cell in table.get_celld().items():
+        cell.set_height(1/len(rowLabels))
