@@ -1,7 +1,7 @@
 '''
 Templates for matplotlib.
 '''
-from typing import Optional
+from typing import Optional, List, Literal
 
 import numpy as np
 import matplotlib as mpl
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 def share_plot(fig: plt.Figure,
                row: int, col: int,
-               rect=[0.15, 0.12, 0.10, 0.05]) -> plt.Axes:
+               rect=[0.15, 0.12, 0.10, 0.05]) -> List[plt.Axes]:
     '''
     make axes that sharing x-axis and y-axis.
 
@@ -35,7 +35,7 @@ def share_plot(fig: plt.Figure,
         for j in range(col):
             left = rect[0]+j*width
             bot = rect[1]+(row-i-1)*height
-            axis = fig.add_axes([left, bot, width, height])
+            axis = fig.add_axes((left, bot, width, height))
             axes.append(axis)
     return axes
 
@@ -152,4 +152,8 @@ def get_fig_w_pixels(xpixel: int, ypixel: int,
         dpi = plt.rcParams['figure.dpi']
     figx = xpixel/dpi
     figy = ypixel/dpi
+    if 'figsize' in kwargs:
+        del kwargs['figsize']
+    if 'dpi' in kwargs:
+        del kwargs['dpi']
     return plt.figure(figsize=(figx, figy), dpi=dpi, *args, **kwargs)
