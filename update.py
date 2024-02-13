@@ -38,8 +38,8 @@ def __cprint(msg, fg, bg, **kwargs):
 
 
 def __err_msg(root, cmd, fg, bg):
-    __cprint('failed to run {}. please check {}'.format(
-        ' '.join(cmd), root),
+    __cprint('failed to run command {}. please check {}'.format(
+        cmd, root),
         fg=fg, bg=bg, file=sys.stderr)
 
 
