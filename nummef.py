@@ -65,7 +65,7 @@ def psd(x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     return freq[idx], psd[idx]
 
 
-def pca(data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def pca(data: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculate the PCA (Principal Component Analysis).
     (ref: https://arxiv.org/abs/1404.1100)
@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
         plt.show()
     elif sys.argv[1] == 'pca':
-        freq = 100  # Hz
+        in_freq = 100  # Hz
         time = np.arange(0, 10, 0.001)  # sec
         amp = 3  # ?
         noise = 1.0
@@ -124,7 +124,7 @@ if __name__ == '__main__':
 
         # Observe simple harmonic data
         # from a direction orthogonal to a certain direction
-        raw_data = amp*np.sin(time/freq*2*np.pi)
+        raw_data = amp*np.sin(time/in_freq*2*np.pi)
         rot_mat = np.array([
                 [np.cos(rot_angle*np.pi/180), np.sin(rot_angle*np.pi/180)],
                 [-np.sin(rot_angle*np.pi/180), np.cos(rot_angle*np.pi/180)],
@@ -138,8 +138,8 @@ if __name__ == '__main__':
         for i in range(data.shape[0]):
             data[i] -= np.mean(data[i])
 
-        xlim = [np.min([data[0], Y[0]])*1.1, np.max([data[0], Y[0]])*1.1]
-        ylim = [np.min([data[1], Y[1]])*1.1, np.max([data[1], Y[1]])*1.1]
+        xlim = (np.min([data[0], Y[0]])*1.1, np.max([data[0], Y[0]])*1.1)
+        ylim = (np.min([data[1], Y[1]])*1.1, np.max([data[1], Y[1]])*1.1)
         fig1 = plt.figure()
         ax11 = fig1.add_subplot(221)
         ax12 = fig1.add_subplot(222)
