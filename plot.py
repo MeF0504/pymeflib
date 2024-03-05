@@ -41,7 +41,7 @@ def share_plot(fig: plt.Figure,
 
 
 def add_1_colorbar(fig: plt.Figure,
-                   image: mpl.image.AxesImage,
+                   mappable: mpl.cm.ScalarMappable,
                    rect=[0.91, 0.1, 0.02, 0.8],
                    **kwargs,
                    ) -> None:
@@ -52,8 +52,8 @@ def add_1_colorbar(fig: plt.Figure,
     ----------
     fig: matplotlib.pyplot.Figure
         input figure to plot colorbar.
-    image: matplotlib.image.AxesImage
-        input image of colorbar.
+    mappable: matplotlib.cm.ScalarMappable
+        input mappable object.
         return value of plt.plot, plt.imshow etc.
     rect: sequence of float
         The dimensions [left, bottom, width, height] of the colorbar.
@@ -65,7 +65,7 @@ def add_1_colorbar(fig: plt.Figure,
     None
     '''
     cax = fig.add_axes(rect)
-    fig.colorbar(image, cax=cax, **kwargs)
+    fig.colorbar(mappable, cax=cax, **kwargs)
 
 
 def rotate_labels(axes: plt.Axes, angle: float, labels, axis='x') -> None:
