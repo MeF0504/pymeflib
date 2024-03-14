@@ -9,9 +9,11 @@ from .color import FG, BG, END, FG256, BG256, ColTypes
 __logger = getLogger(__name__)
 __null_hdlr = NullHandler()
 __logger.addHandler(__null_hdlr)
+FGBG = Union[int, ColTypes, None]
 
 
-def __cprint(msg, fg, bg, logger=None, **kwargs):
+def __cprint(msg: str, fg: FGBG, bg: FGBG, logger: Optional[Logger] = None,
+             **kwargs):
     if logger is None:
         logger = __logger
     if type(fg) is str and fg in FG:
@@ -40,20 +42,20 @@ def __cprint(msg, fg, bg, logger=None, **kwargs):
     print(print_str, **kwargs)
 
 
-def __err_msg(root, cmd, fg, bg):
+def __err_msg(root: str, cmd: list[str], fg: FGBG, bg: FGBG):
     __cprint('failed to run command {}. please check {}'.format(
         cmd, root),
         fg=fg, bg=bg, file=sys.stderr)
 
 
 def run(root: str,
-        msg_fg: Union[ColTypes, int, None] = None,
-        msg_bg: Union[ColTypes, int, None] = None,
-        err_fg: Union[ColTypes, int, None] = None,
-        err_bg: Union[ColTypes, int, None] = None,
+        msg_fg: FGBG = None,
+        msg_bg: FGBG = None,
+        err_fg: FGBG = None,
+        err_bg: FGBG = None,
         def_br: str = 'main',
         logger: Optional[Logger] = None,
-        ):
+        ) -> None:
     """
     update git repository at root.
 

@@ -1,6 +1,9 @@
 
 import re
 import sys
+from pathlib import Path
+from typing import Union
+from io import TextIOWrapper
 
 from .color import convert_color_name, convert_fullcolor_to_256
 
@@ -13,7 +16,20 @@ else:
 
 
 class XPMLoader():
-    def __init__(self, xpm_file):
+    """
+    Loader of xpm file.
+
+    Parameters
+    ----------
+    xpm_file: str or path-like object
+        loaded file.
+
+    Returns
+    -------
+    None
+    """
+
+    def __init__(self, xpm_file: Union[str, Path]):
         with open(xpm_file) as f:
             res = self.remove_comments(f)
 
@@ -37,7 +53,7 @@ class XPMLoader():
         # print(width, height, colors, char_per_pixel)
 
         tmp_color_settings = res[1:colors+1]
-        color_settings = {}
+        color_settings: dict[str, dict[str, str]] = {}
         for cs in tmp_color_settings:
             char = cs[:char_per_pixel]
             cs_tmp = re.split(' +', cs)
@@ -63,7 +79,20 @@ class XPMLoader():
         self.color_settings = color_settings
         self.body = body
 
-    def remove_comments(self, fileobj):
+    def remove_comments(self, fileobj: TextIOWrapper) -> str:
+        """
+        remove comments in the xpm file.
+
+        Parameters
+        ----------
+        fileobj: file object
+            file object that the comments will be removed.
+
+        Returns
+        -------
+        str
+            comment-removed lines.
+        """
         res = ''
         com_lines = False
         for line in fileobj:
@@ -98,7 +127,18 @@ class XPMLoader():
             res += tmpline
         return res
 
-    def get_color_settings_full(self):
+    def get_color_settings_full(self) -> None:
+        """
+        get color settings for full-color.
+        "color_settings_full" attribute will be added.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        None
+        """
         color_setting = self.color_settings
         color_settings_full = {}
         for char in color_setting:
@@ -108,14 +148,26 @@ class XPMLoader():
                 color_settings_full[char] = color_setting[char]['color']
             else:
                 color_full = convert_color_name(color_setting[char]['color'],
-                                                'full', True)
+                                                'full')
                 if color_full is None:
                     color_full = '#000000'
                 color_settings_full[char] = color_full
 
         self.color_settings_full = color_settings_full
 
-    def xpm_to_ndarray(self):
+    def xpm_to_ndarray(self) -> bool:
+        """
+        get ndarray of xpm file.
+        "ndarray" attribute will be added.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        bool
+            return True if ndarray is added.
+        """
         if not numpy_enabled:
             return False
         self.get_color_settings_full()
@@ -139,7 +191,20 @@ class XPMLoader():
         self.ndarray = data
         return True
 
-    def get_vim_setings(self, gui=True):
+    def get_vim_setings(self, gui: bool = True) -> None:
+        """
+        get strings to set vim highlights.
+        see "meflib#tools#xpm_loader" in https://github.com/MeF0504/basic_setup/blob/master/vim/autoload/meflib/tools.vim for detail.
+
+        Parameters
+        ----------
+        gui: bool
+            return the setting lines for gui mode if True.
+
+        Returns
+        -------
+        None
+        """
         if gui:
             term = 'gui'
         else:
@@ -152,7 +217,7 @@ class XPMLoader():
             self.get_color_settings_full()
             color_setting = self.color_settings_full
 
-        self.vim_settings = []
+        self.vim_settings: list[dict[str, str]] = []
         for i, char in enumerate(color_setting):
             self.vim_settings.append({})
             if gui:

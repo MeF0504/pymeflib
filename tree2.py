@@ -194,6 +194,24 @@ class TreeViewer():
 
 def show_tree(root: str, get_contents: GC,
               add_info: AddInfo = None, purepath: PPath = PurePath) -> None:
+    """
+    a quick function to show tree structure.
+
+    Parameters
+    ----------
+    root: str
+        root directory.
+    get_contents: callable
+        a function to get contents of the given path.
+    add_info: callable
+        a function to show an additional information.
+    purepath: PurePath or PurePosixPath or PureWindowsPath
+        a variable to specify the used PurePath class.
+
+    Returns
+    -------
+    None
+    """
     tree_view = TreeViewer(root, get_contents, purepath)
     for cpath, dirs, files in tree_view:
         tree_view.show(add_info)

@@ -2,13 +2,26 @@ import os
 import os.path as op
 import platform
 from logging import getLogger, NullHandler, Logger
+from typing import Optional
 
 __logger = getLogger(__name__)
 __null_hdlr = NullHandler()
 __logger.addHandler(__null_hdlr)
 
 
-def mkdir(path):
+def mkdir(path: str) -> None:
+    """
+    make a directory safely.
+
+    Parameters
+    ----------
+    path: str
+        directory path.
+
+    Returns
+    -------
+    None
+    """
     path = op.expanduser(path)
     if not op.exists(path):
         print('mkdir '+path)
@@ -16,7 +29,20 @@ def mkdir(path):
         # os.chmod(path,0755)
 
 
-def chk_cmd(cmd, logger=None):   # check the command exists.
+def chk_cmd(cmd: str, logger: Optional[Logger] = None) -> bool:
+    """
+    check the command exists and is executable.
+
+    Parameters
+    ----------
+    cmd: str
+        the checked command.
+        both the command itself or full path of that command is acceptable.
+
+    Returns
+    -------
+    None
+    """
     if logger is None:
         logger = __logger
     full_path = os.path.expanduser(os.path.expandvars(cmd))
