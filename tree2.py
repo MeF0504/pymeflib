@@ -2,6 +2,7 @@
 
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from typing import Callable, Optional, Union, Tuple, List, Type
+from logging import getLogger, NullHandler, Logger
 
 branch_str = '|__ '
 branch_str2 = '|   '
@@ -78,7 +79,8 @@ class TreeViewer():
     """
 
     def __init__(self, root: str, get_contents: GC,
-                 purepath: PPath = PurePath) -> None:
+                 purepath: PPath = PurePath,
+                 logger: Optional[Logger] = None) -> None:
         assert purepath in [PurePath, PurePosixPath, PureWindowsPath]
         self.root = purepath(root)    # root path
         self.cpath = purepath('.')   # current path (relative)
@@ -87,7 +89,13 @@ class TreeViewer():
         self.finish = False
         self.get_contents = get_contents
         self.maxcnt = -1
-        self.debug = False
+        if logger is None:
+            _logger = getLogger(__name__)
+            _null_hdlr = NullHandler()
+            _logger.addHandler(_null_hdlr)
+            self.logger = _logger
+        else:
+            self.logger = logger
 
     def __iter__(self) -> "TreeViewer":
         return self
@@ -101,14 +109,13 @@ class TreeViewer():
             self.finish = True
         if self.nextpath is not None:
             self.cpath = self.nextpath
-            self.debugprint('set cpath: {}'.format(self.cpath))
+            self.logger.debug(f'set cpath: {self.cpath}')
         dirs, files = self.get_contents(self.cpath)
-        # self.debugprint('{} {}'.format(dirs, files))
 
         # search next path.
         if dirs:
             # go down
-            self.debugprint('next: {}'.format(dirs[0]))
+            self.logger.debug(f'next: {dirs[0]}')
             self.nextpath = self.cpath/dirs[0]
         else:
             # go up
@@ -120,35 +127,31 @@ class TreeViewer():
                 while True:
                     cur_dir = tmp_path.name
                     tmp_path = tmp_path.parent
-                    self.debugprint('@ {}'.format(tmp_path.parts))
+                    self.logger.debug(f'@ {tmp_path.parts}')
                     tmp_dirs, tmp_files = self.get_contents(tmp_path)
-                    self.debugprint('find {} in {}'.format(cur_dir, tmp_dirs))
+                    self.logger.debug(f'find {cur_dir} in {tmp_dirs}')
                     if cur_dir in tmp_dirs:
                         idx = tmp_dirs.index(cur_dir)
                         if idx+1 < len(tmp_dirs):
                             self.nextpath = tmp_path/tmp_dirs[idx+1]
-                            self.debugprint('next path: {}'.format(self.nextpath))
+                            self.logger.debug(f'next path: {self.nextpath}')
                             break
                         else:
                             if self.is_root(tmp_path):
-                                self.debugprint('reached the last dir of root.')
+                                self.logger.debug('reached the last dir of root.')
                                 self.finish = True
                                 break
                     else:
-                        self.debugprint('{}, {}'.format(tmp_path, tmp_dirs))
+                        self.logger.debug(f'{tmp_path}, {tmp_dirs}')
                         print('something wrong.')
                         raise StopIteration()
-        self.debugprint('return {}, {}, {}'.format(self.cpath, dirs, files))
+        self.logger.debug(f'return {self.cpath}, {dirs}, {files}')
         return self.cpath, dirs, files
-
-    def debugprint(self, msg: str) -> None:
-        if self.debug:
-            print(msg)
 
     def is_root(self, path: Optional[PurePath] = None) -> bool:
         if path is None:
             path = self.cpath
-        self.debugprint('root? {}'.format(path.parts))
+        self.logger.debug(f'root? {path.parts}')
         if path.parts:
             return False
         else:
@@ -157,7 +160,7 @@ class TreeViewer():
     def show(self, add_info: AddInfo = None) -> None:
         fullpath = self.root/self.cpath
         dirs, files = self.get_contents(self.cpath)
-        self.debugprint('show: {} !!'.format(self.cpath.parts))
+        self.logger.debug(f'show: {self.cpath.parts} !!')
         if self.is_root():
             # root
             print('{}/'.format(self.root))

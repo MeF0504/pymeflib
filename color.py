@@ -1,6 +1,11 @@
 import os
 import sys
 import json
+from typing import Literal, Optional
+from logging import getLogger, NullHandler, Logger
+# local なglobal変数に__をつける
+# 型とdocを書く
+# warning を直す
 
 BG = {
         'k': '\033[40m',
@@ -21,7 +26,14 @@ FG = {
         'c': '\033[36m',
         'y': '\033[33m'}
 END = '\033[0m'
-col_list = None
+
+col_list: Optional[dict[str]] = None
+
+ColTypes = Literal['k', 'w', 'r', 'g', 'b', 'c', 'm', 'y']
+
+__logger = getLogger(__name__)
+__null_hdlr = NullHandler()
+__logger.addHandler(__null_hdlr)
 
 
 def BG256(n):
@@ -38,14 +50,16 @@ def FG256(n):
         return ''
 
 
-def make_bitmap(filename, rgb, bmp_type='Windows', verbose=False):
+def make_bitmap(filename, rgb, bmp_type='Windows',
+                verbose=False, logger=None):
+    if logger is None:
+        logger = __logger
     if rgb.shape[-1] == 4:
         rgb = rgb[:, :, [0, 1, 2]]
 
     height, width, cols = rgb.shape
-    if verbose:
-        print('{}x{}x{}'.format(height, width, cols))
-        print('bitmap type: {}'.format(bmp_type))
+    logger.info(f'{height}x{width}x{cols}')
+    logger.info(f'bitmap type: {bmp_type}')
 
     # make color table (it doesn't need in 24bmp format.)
     # q_bit = 256
@@ -54,8 +68,7 @@ def make_bitmap(filename, rgb, bmp_type='Windows', verbose=False):
     #     for g in range(q_bit):
     #         for b in range(q_bit):
     #             color_table += [int(b), int(g), int(r), int(0)]
-    # if verbose:
-    #     print('color table: ({}); {}...'.format(len(color_table), color_table[:10]))
+    # logger.debug(f'color table: ({len(color_table)}); {color_table[:10]}')
     len_cols = len(color_table)
     num_cols = len(color_table) >> 2
 
@@ -71,14 +84,12 @@ def make_bitmap(filename, rgb, bmp_type='Windows', verbose=False):
         for k in range(padding):
             line_data.append(0)
         img_data += line_data
-    if verbose:
-        print_st = '{}, '.format(img_data[0])
-        print_end = '{}'.format(img_data[-1])
-        for i in range(1, 6):
-            print_st += '{}, '.format(img_data[i])
-            print_end = '{}, '.format(img_data[-i-1]) + print_end
-        print('pixel data: ({}); [{} ... {}]'.format(len(img_data),
-                                                     print_st, print_end))
+    print_st = f'{img_data[0]}, '
+    print_end = f'{img_data[-1]}'
+    for i in range(1, 6):
+        print_st += f'{img_data[i]}, '
+        print_end = f'{img_data[-i-1]}, ' + print_end
+    logger.debug(f'pixel data: ({len(img_data)}); [{print_st} ... {print_end}')
     len_data = len(img_data)
 
     if bmp_type == 'Windows':
@@ -139,14 +150,15 @@ def make_bitmap(filename, rgb, bmp_type='Windows', verbose=False):
         elif filesize > 1024:
             filesize /= 1024
             prefix = 'k'
-        print('size of made file: {:.1f} {}B'.format(filesize, prefix))
+        print('file size: {:.1f} {}B'.format(filesize, prefix))
 
 
-def convert_color_name(color_name, color_type, verbose=False):
+def convert_color_name(color_name, color_type, logger=None):
+    if logger is None:
+        logger = __logger
     if color_type not in ['256', 'full']:
-        if verbose:
-            print('incorrect color type ({}).'.format(color_type))
-            print('selectable type: "256" or "full". return None.')
+        logger.warning(f'incorrect color type ({color_type})')
+        logger.warning('selectable type: "256" or "full". return None.')
         return None
 
     global col_list
@@ -162,8 +174,7 @@ def convert_color_name(color_name, color_type, verbose=False):
         try:
             import matplotlib.colors as mcolors
         except ImportError:
-            if verbose:
-                print('matplotlib is not imported.')
+            logger.warning('matplotlib is not imported.')
         else:
             named_colors = mcolors.get_named_colors_mapping()
             col_list.update(named_colors)
@@ -172,12 +183,12 @@ def convert_color_name(color_name, color_type, verbose=False):
             if 'gray{:d}'.format(i) in col_list:
                 continue
             gray_level = int(255*i/100+0.5)
-            col_list['gray{:d}'.format(i)] = {'256': None, 'full': '#{:02x}{:02x}{:02x}'.format(gray_level, gray_level, gray_level)}
-            col_list['grey{:d}'.format(i)] = {'256': None, 'full': '#{:02x}{:02x}{:02x}'.format(gray_level, gray_level, gray_level)}
+            full_col = f'#{gray_level:02x}{gray_level:02x}{gray_level:02x}'
+            col_list[f'gray{i:d}'] = {'256': None, 'full': full_col}
+            col_list[f'grey{i:d}'] = {'256': None, 'full': full_col}
 
     if color_name not in col_list:
-        if verbose:
-            print('no match color name {} found. return None.'.format(color_name))
+        logger.warning('no match color name {color_name} found. return None.')
         return None
     else:
         col = col_list[color_name]

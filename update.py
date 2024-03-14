@@ -1,14 +1,19 @@
 import os
 import sys
 import subprocess
-from typing import Union
+from typing import Union, Optional, Literal
+from logging import getLogger, NullHandler, Logger
 
-from .color import FG, BG, END, FG256, BG256
+from .color import FG, BG, END, FG256, BG256, ColTypes
 
-__debug = False
+__logger = getLogger(__name__)
+__null_hdlr = NullHandler()
+__logger.addHandler(__null_hdlr)
 
 
-def __cprint(msg, fg, bg, **kwargs):
+def __cprint(msg, fg, bg, logger=None, **kwargs):
+    if logger is None:
+        logger = __logger
     if type(fg) is str and fg in FG:
         fg_str = FG[fg]
     elif type(fg) is int and 0 <= fg <= 255:
@@ -16,8 +21,7 @@ def __cprint(msg, fg, bg, **kwargs):
     elif fg is None:
         fg_str = ''
     else:
-        if __debug:
-            print(f'incorrect type for fg: {fg}')
+        logger.warning(f'incorrect type for fg: {fg}')
         fg_str = ''
     if type(bg) is str and bg in BG:
         bg_str = BG[bg]
@@ -26,8 +30,7 @@ def __cprint(msg, fg, bg, **kwargs):
     elif bg is None:
         bg_str = ''
     else:
-        if __debug:
-            print(f'incorrect type for bg: {bg}')
+        logger.warning(f'incorrect type for bg: {bg}')
         bg_str = ''
     if len(fg_str+bg_str) != 0:
         end_str = END
@@ -44,11 +47,13 @@ def __err_msg(root, cmd, fg, bg):
 
 
 def run(root: str,
-        msg_fg: Union[int, str, None] = None,
-        msg_bg: Union[int, str, None] = None,
-        err_fg: Union[int, str, None] = None,
-        err_bg: Union[int, str, None] = None,
-        def_br: str = 'main'):
+        msg_fg: Union[ColTypes, int, None] = None,
+        msg_bg: Union[ColTypes, int, None] = None,
+        err_fg: Union[ColTypes, int, None] = None,
+        err_bg: Union[ColTypes, int, None] = None,
+        def_br: str = 'main',
+        logger: Optional[Logger] = None,
+        ):
     """
     update git repository at root.
 
@@ -67,6 +72,8 @@ def run(root: str,
     -------
     None
     """
+    if logger is None:
+        logger = __logger
     os.chdir(root)
     # ~~~~~~~~~~~~~~~ fetch ~~~~~~~~~~~~~~~
     cmd = 'git fetch'.split()
@@ -97,10 +104,8 @@ def run(root: str,
     if stat.returncode != 0:
         __err_msg(root, cmd, err_fg, err_bg)
         return
-    if __debug:
-        print('log std out: \n{}'.format(stat.stdout.decode()))
-    if __debug:
-        print('log std err: \n{}'.format(stat.stderr.decode()))
+    logger.debug(f'std out;\n{stat.stdout.decode()}')
+    logger.debug(f'std err;\n{stat.stderr.decode()}')
     if len(stat.stderr+stat.stdout) == 0:
         # no update
         __cprint('already updated.', fg=msg_fg, bg=msg_bg)

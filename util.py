@@ -1,6 +1,11 @@
 import os
 import os.path as op
 import platform
+from logging import getLogger, NullHandler, Logger
+
+__logger = getLogger(__name__)
+__null_hdlr = NullHandler()
+__logger.addHandler(__null_hdlr)
 
 
 def mkdir(path):
@@ -11,16 +16,16 @@ def mkdir(path):
         # os.chmod(path,0755)
 
 
-def chk_cmd(cmd, verbose=False):   # check the command exists.
+def chk_cmd(cmd, logger=None):   # check the command exists.
+    if logger is None:
+        logger = __logger
     full_path = os.path.expanduser(os.path.expandvars(cmd))
     if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
-        if verbose:
-            print('find {}'.format(full_path))
+        logger.info(f'find {full_path}')
         return True
 
     if 'PATH' not in os.environ:
-        if verbose:
-            print("PATH isn't found in environment values.")
+        logger.warning("PATH isn't found in environment values.")
         return False
 
     if platform.uname()[0] == 'Windows':
@@ -28,9 +33,7 @@ def chk_cmd(cmd, verbose=False):   # check the command exists.
     for path in os.environ['PATH'].split(os.pathsep):
         cmd_path = op.join(path, cmd)
         if op.isfile(cmd_path) and os.access(cmd_path, os.X_OK):
-            if verbose:
-                print('find {} ... {}'.format(cmd,  cmd_path))
+            logger.info(f'find {cmd} ... {cmd_path}')
             return True
-    if verbose:
-        print('command {} is not found.'.format(cmd))
+    logger.info(f'command {cmd} is not found.')
     return False
