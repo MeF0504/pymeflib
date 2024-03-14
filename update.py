@@ -1,7 +1,7 @@
 import os
 import sys
 import subprocess
-from typing import Union, Optional, Literal
+from typing import Union, Optional
 from logging import getLogger, NullHandler, Logger
 
 from .color import FG, BG, END, FG256, BG256, ColTypes

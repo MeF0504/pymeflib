@@ -192,9 +192,9 @@ def convert_color_name(color_name, color_type, logger=None):
         return None
     else:
         col = col_list[color_name]
-        if type(col) == dict:
+        if type(col) is dict:
             return col[color_type]
-        elif type(col) == str:
+        elif type(col) is str:
             if color_type == 'full':
                 return col_list[color_name]
             elif color_type == '256':

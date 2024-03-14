@@ -25,7 +25,8 @@ class XPMLoader():
         elif len(info_list) == 6:
             width, height, colors, char_per_pixel, x_hot, y_hot = info_list
         else:
-            print('{}: fail to load xpm file (color settings).'.format(xpm_file), file=sys.stderr)
+            print(f'{xpm_file}: fail to load xpm file (color settings).',
+                  file=sys.stderr)
             return
         info = {
                 'width': width,
