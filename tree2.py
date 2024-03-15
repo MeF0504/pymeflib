@@ -42,6 +42,9 @@ class TreeViewer():
             a list of files. In this context, "file" means a path that
             itself have a information.
 
+    logger: logging.Logger or None
+        a logger to log information. If None is set, nothing is logged.
+
     purepath: PurePath or PurePosixPath or PureWindowsPath
         a variable to specify the used PurePath class.
 
@@ -79,8 +82,9 @@ class TreeViewer():
     """
 
     def __init__(self, root: str, get_contents: GC,
+                 logger: Optional[Logger] = None,
                  purepath: PPath = PurePath,
-                 logger: Optional[Logger] = None) -> None:
+                 ) -> None:
         assert purepath in [PurePath, PurePosixPath, PureWindowsPath]
         self.root = purepath(root)    # root path
         self.cpath = purepath('.')   # current path (relative)
@@ -193,7 +197,9 @@ class TreeViewer():
 
 
 def show_tree(root: str, get_contents: GC,
-              add_info: AddInfo = None, purepath: PPath = PurePath) -> None:
+              add_info: AddInfo = None,
+              logger: Optional[Logger] = None,
+              purepath: PPath = PurePath) -> None:
     """
     a quick function to show tree structure.
 
@@ -212,7 +218,7 @@ def show_tree(root: str, get_contents: GC,
     -------
     None
     """
-    tree_view = TreeViewer(root, get_contents, purepath)
+    tree_view = TreeViewer(root, get_contents, logger, purepath)
     for cpath, dirs, files in tree_view:
         tree_view.show(add_info)
 
