@@ -2,7 +2,7 @@ import os
 import sys
 import json
 from pathlib import Path
-from typing import Literal, Optional, Union, Any
+from typing import Literal, Optional, Union, Any, List, Dict, Tuple
 from logging import getLogger, NullHandler, Logger
 
 BG = {
@@ -25,8 +25,8 @@ FG = {
         'y': '\033[33m'}
 END = '\033[0m'
 
-__col_list: Optional[dict[str, Union[dict[str, Union[str, int, None]],
-                                     str, tuple[float]]
+__col_list: Optional[Dict[str, Union[Dict[str, Union[str, int, None]],
+                                     str, Tuple[float]]
                           ]] = None
 
 ColTypes = Literal['k', 'w', 'r', 'g', 'b', 'c', 'm', 'y']
@@ -115,7 +115,7 @@ def make_bitmap(filename: Union[str, Path], rgb: Any,
 
     # make color table (it doesn't need in 24bmp format.)
     # q_bit = 256
-    color_table: list[int] = []
+    color_table: List[int] = []
     # for r in range(q_bit):
     #     for g in range(q_bit):
     #         for b in range(q_bit):

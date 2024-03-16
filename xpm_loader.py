@@ -2,7 +2,7 @@
 import re
 import sys
 from pathlib import Path
-from typing import Union
+from typing import Union, List, Dict
 from io import TextIOWrapper
 
 from .color import convert_color_name, convert_fullcolor_to_256
@@ -53,7 +53,7 @@ class XPMLoader():
         # print(width, height, colors, char_per_pixel)
 
         tmp_color_settings = res[1:colors+1]
-        color_settings: dict[str, dict[str, str]] = {}
+        color_settings: Dict[str, Dict[str, str]] = {}
         for cs in tmp_color_settings:
             char = cs[:char_per_pixel]
             cs_tmp = re.split(' +', cs)
@@ -217,7 +217,7 @@ class XPMLoader():
             self.get_color_settings_full()
             color_setting = self.color_settings_full
 
-        self.vim_settings: list[dict[str, str]] = []
+        self.vim_settings: List[Dict[str, str]] = []
         for i, char in enumerate(color_setting):
             self.vim_settings.append({})
             if gui:

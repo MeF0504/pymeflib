@@ -1,7 +1,7 @@
 import os
 import sys
 import subprocess
-from typing import Union, Optional
+from typing import Union, Optional, List
 from logging import getLogger, NullHandler, Logger
 
 from .color import FG, BG, END, FG256, BG256, ColTypes
@@ -42,7 +42,7 @@ def __cprint(msg: str, fg: FGBG, bg: FGBG, logger: Optional[Logger] = None,
     print(print_str, **kwargs)
 
 
-def __err_msg(root: str, cmd: list[str], fg: FGBG, bg: FGBG):
+def __err_msg(root: str, cmd: List[str], fg: FGBG, bg: FGBG):
     __cprint('failed to run command {}. please check {}'.format(
         cmd, root),
         fg=fg, bg=bg, file=sys.stderr)
