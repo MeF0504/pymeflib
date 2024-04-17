@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pymeflib"
+version = "1.0.20240417"
+description = "MeF0504 personal python library"
+license = {file = "LICENSE"}
+authors = [{name = "MeF0504"}]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Private :: Do Not Upload",
+]
