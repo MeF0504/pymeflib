@@ -152,11 +152,9 @@ def get_fig_w_pixels(xpixel: int, ypixel: int,
         dpi = plt.rcParams['figure.dpi']
     figx = xpixel/dpi
     figy = ypixel/dpi
-    if 'figsize' in kwargs:
-        del kwargs['figsize']
-    if 'dpi' in kwargs:
-        del kwargs['dpi']
-    return plt.figure(figsize=(figx, figy), dpi=dpi, *args, **kwargs)
+    kwargs['figsize'] = (figx, figy)
+    kwargs['dpi'] = dpi
+    return plt.figure(*args, **kwargs)
 
 
 def make_table(axes: plt.Axes, data: np.ndarray,
