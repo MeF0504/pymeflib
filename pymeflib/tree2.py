@@ -1,17 +1,17 @@
 # library that supports to show files in tree form.
 
+from __future__ import annotations
+
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
-from typing import Callable, Optional, Union, Tuple, List, Type
+from typing import Callable, Type
 from logging import getLogger, NullHandler, Logger
 
 branch_str = '|__ '
 branch_str2 = '|   '
 
-GC = Callable[[PurePath], Tuple[List[str], List[str]]]
-AddInfo = Optional[Callable[[Union[str, PurePath]], List[str]]]
-PPath = Union[Type[PurePath],
-              Type[PurePosixPath],
-              Type[PureWindowsPath]]
+GC = Callable[[PurePath], tuple[list[str], list[str]]]
+AddInfo = Callable[[str | PurePath], list[str]]
+PPath = Type[PurePath] | Type[PurePosixPath] | Type[PureWindowsPath]
 
 
 class TreeViewer():
@@ -82,13 +82,13 @@ class TreeViewer():
     """
 
     def __init__(self, root: str, get_contents: GC,
-                 logger: Optional[Logger] = None,
+                 logger: Logger | None = None,
                  purepath: PPath = PurePath,
                  ) -> None:
         assert purepath in [PurePath, PurePosixPath, PureWindowsPath]
         self.root = purepath(root)    # root path
         self.cpath = purepath('.')   # current path (relative)
-        self.nextpath: Optional[PurePath] = None
+        self.nextpath: PurePath | None = None
         self.cnt = 0
         self.finish = False
         self.get_contents = get_contents
@@ -104,7 +104,7 @@ class TreeViewer():
     def __iter__(self) -> "TreeViewer":
         return self
 
-    def __next__(self) -> Tuple[PurePath, List[str], List[str]]:
+    def __next__(self) -> tuple[PurePath, list[str], list[str]]:
         if self.finish:
             raise StopIteration()
         self.cnt += 1
@@ -152,7 +152,7 @@ class TreeViewer():
         self.logger.debug(f'return {self.cpath}, {dirs}, {files}')
         return self.cpath, dirs, files
 
-    def is_root(self, path: Optional[PurePath] = None) -> bool:
+    def is_root(self, path: PurePath | None = None) -> bool:
         if path is None:
             path = self.cpath
         self.logger.debug(f'root? {path.parts}')
@@ -161,7 +161,7 @@ class TreeViewer():
         else:
             return True
 
-    def show(self, add_info: AddInfo = None) -> None:
+    def show(self, add_info: AddInfo | None = None) -> None:
         fullpath = self.root/self.cpath
         dirs, files = self.get_contents(self.cpath)
         self.logger.debug(f'show: {self.cpath.parts} !!')
@@ -197,8 +197,8 @@ class TreeViewer():
 
 
 def show_tree(root: str, get_contents: GC,
-              add_info: AddInfo = None,
-              logger: Optional[Logger] = None,
+              add_info: AddInfo | None = None,
+              logger: Logger | None = None,
               purepath: PPath = PurePath) -> None:
     """
     a quick function to show tree structure.
