@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from typing import Callable, Type
 from logging import getLogger, NullHandler, Logger
@@ -155,9 +156,15 @@ class TreeViewer():
     def _print_contents(self, branch1: str, branch2: str,
                         path: str,
                         add_info_pre: str, add_info_post: str) -> None:
-        print(f'{branch1}{branch2}'
-              f'{add_info_pre}{path}{add_info_post}'
-              )
+        if '\n' in add_info_pre:
+            warnings.warn('add_info_pre contains newline character.')
+        str_wo_post = f'{branch2}{add_info_pre}{path}'
+        post_list = add_info_post.split('\n')
+        for i, pl in enumerate(post_list):
+            if i == 0:
+                print(f'{branch1}{str_wo_post}{pl}')
+            else:
+                print(f'{branch1}|{" "*(len(str_wo_post)-1)}{pl}')
 
     def is_root(self, path: PurePath | None = None) -> bool:
         if path is None:
@@ -231,8 +238,10 @@ def show_tree(root: str, get_contents: GC,
 
 
 if __name__ == '__main__':
+    import os
     from pathlib import Path
     from functools import partial
+    from datetime import datetime
 
     def get_contents(root, cpath):
         fullpath = Path(root)/cpath
@@ -245,5 +254,15 @@ if __name__ == '__main__':
                 dirs.append(f.name)
         return dirs, files
 
+    def add_info(cpath):
+        if os.path.isdir(cpath):
+            return '', ''
+        else:
+            stat = os.stat(cpath)
+            dt = datetime.fromtimestamp(stat.st_mtime)
+            dt_str = dt.strftime('%Y/%m/%d-%H:%M:%S')
+            filesize = os.path.getsize(cpath)
+            return 'detail: ', f' ~{dt_str}\n file size: {filesize}B'
+
     root = 'pymeflib'
-    show_tree(root, partial(get_contents, root))
+    show_tree(root, partial(get_contents, root))  # , add_info=add_info)
