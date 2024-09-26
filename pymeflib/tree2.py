@@ -152,6 +152,13 @@ class TreeViewer():
         self.logger.debug(f'return {self.cpath}, {dirs}, {files}')
         return self.cpath, dirs, files
 
+    def _print_contents(self, branch1: str, branch2: str,
+                        path: str,
+                        add_info_pre: str, add_info_post: str) -> None:
+        print(f'{branch1}{branch2}'
+              f'{add_info_pre}{path}{add_info_post}'
+              )
+
     def is_root(self, path: PurePath | None = None) -> bool:
         if path is None:
             path = self.cpath
@@ -174,8 +181,8 @@ class TreeViewer():
                 else:
                     add_info_pre, add_info_post = add_info(fullpath/f)
 
-                print('{}{}{}{}'.format(branch_str, add_info_pre,
-                                        f, add_info_post))
+                self._print_contents('', branch_str,
+                                     f, add_info_pre, add_info_post)
         else:
             if add_info is None:
                 add_info_pre, add_info_post = ['', '']
@@ -183,17 +190,17 @@ class TreeViewer():
                 add_info_pre, add_info_post = add_info(fullpath)
 
             dnum = len(self.cpath.parts)-1
-            print('{}{}{}{}/{}'.format(branch_str2*(dnum), branch_str,
-                                       add_info_pre, self.cpath.name,
-                                       add_info_post))
+            self._print_contents(branch_str2*(dnum), branch_str,
+                                 self.cpath.name,
+                                 add_info_pre, add_info_post)
             for f in files:
                 if add_info is None:
                     add_info_pre, add_info_post = ['', '']
                 else:
                     add_info_pre, add_info_post = add_info(fullpath/f)
 
-                print('{}{}{}{}{}'.format(branch_str2*(dnum+1), branch_str,
-                                          add_info_pre, f, add_info_post))
+                self._print_contents(branch_str2*(dnum+1), branch_str,
+                                     f, add_info_pre, add_info_post)
 
 
 def show_tree(root: str, get_contents: GC,
@@ -238,4 +245,5 @@ if __name__ == '__main__':
                 dirs.append(f.name)
         return dirs, files
 
-    show_tree('.', partial(get_contents, '.'))
+    root = 'pymeflib'
+    show_tree(root, partial(get_contents, root))
