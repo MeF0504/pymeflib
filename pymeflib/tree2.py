@@ -159,12 +159,13 @@ class TreeViewer():
         if '\n' in add_info_pre:
             warnings.warn('add_info_pre contains newline character.')
         str_wo_post = f'{branch2}{add_info_pre}{path}'
+        L = len(str_wo_post)-len(branch1)
         post_list = add_info_post.split('\n')
         for i, pl in enumerate(post_list):
             if i == 0:
                 print(f'{branch1}{str_wo_post}{pl}')
             else:
-                print(f'{branch1}|{" "*(len(str_wo_post)-1)}{pl}')
+                print(f'{branch1}{branch1}|{" "*(L-1)}{pl}')
 
     def is_root(self, path: PurePath | None = None) -> bool:
         if path is None:
