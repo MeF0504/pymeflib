@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import warnings
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
-from typing import Callable, Type
+from typing import Callable, Type, Union
 from logging import getLogger, NullHandler, Logger
 
 branch_str = '|__ '
 branch_str2 = '|   '
 
 GC = Callable[[PurePath], tuple[list[str], list[str]]]
-AddInfo = Callable[[str | PurePath], list[str]]
-PPath = Type[PurePath] | Type[PurePosixPath] | Type[PureWindowsPath]
+AddInfo = Callable[[Union[str, PurePath]], list[str]]
+PPath = Union[Type[PurePath], Type[PurePosixPath], Type[PureWindowsPath]]
 
 
 class TreeViewer():
