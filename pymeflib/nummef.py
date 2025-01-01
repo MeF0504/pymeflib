@@ -24,12 +24,13 @@ def fft(x: np.ndarray, y: np.ndarray,
     out: ndarray
         Fourier transformed variables.
     """
-    L = len(x)
+    Lx = len(x)
+    dx = np.diff(x).mean()
     ff = np.fft.fft(y)
     ff /= len(ff)/2  # 2 ... +/-
     if ret_abs:
         ff = abs(ff)
-    freq = np.fft.fftfreq(L, d=np.diff(x).mean())
+    freq = np.fft.fftfreq(Lx, d=dx)
     idx = np.where(freq > 1/x.max())
     return freq[idx], ff[idx]
 
@@ -52,17 +53,11 @@ def psd(x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     psd: ndarray
         PSD.
     """
-    Lx = len(x)
-    dx = np.diff(x).mean()
-    freq = np.fft.fftfreq(Lx, d=dx)
-    idx = np.where(freq > 1/x.max())
-    cy = copy(y)
-    cy *= np.hamming(len(cy))
-    ff = np.fft.fft(cy)
-    ff /= len(cy)
-    psd = abs(ff)**2
-    psd *= dx
-    return freq[idx], psd[idx]
+    freq, ff = fft(x, y, ret_abs=True)
+    df = np.diff(freq).mean()
+    psdv = abs(ff)**2
+    psdv /= df
+    return freq, psdv
 
 
 def pca(data: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
