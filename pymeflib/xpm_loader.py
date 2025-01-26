@@ -52,11 +52,21 @@ class XPMLoader():
                                    ]
             fbuf = ctypes.create_string_buffer(str(xpm_file).encode('utf-8'))
             data = ctypes.POINTER(ctypes.c_char_p)()
+            # data = ctypes.POINTER(ctypes.POINTER(ctypes.c_char_p))()
             w = ctypes.POINTER(ctypes.c_int)()
             h = ctypes.POINTER(ctypes.c_int)()
             lib.loader(fbuf, data, w, h)
-            print(data.contents)
-            print(data.contents.value)
+            # print(data.contents)
+            # print(dir(data.contents))
+            # print(data.contents.value)
+            # print(data[0])
+            # print(data[11])
+            info_list = [int(s) for s in data[0].decode('utf-8').split(' ')]
+            # width = info_list[0]
+            height = info_list[1]
+            col_num = info_list[2]
+            res = [data[i].decode('utf-8') for i in range(height+col_num)]
+            print(res)
             return
 
         info_list = [int(s) for s in re.split(' +', res[0]) if s != '']
