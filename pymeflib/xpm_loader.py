@@ -1,10 +1,13 @@
 
+from __future__ import annotations
+
 import re
 import sys
 from pathlib import Path
-from typing import Union, List, Dict
 from io import TextIOWrapper
 import ctypes
+from logging import getLogger, NullHandler, Logger
+from pprint import pformat
 
 if __name__ == "__main__":
     from pymeflib.color import convert_color_name, convert_fullcolor_to_256
@@ -18,6 +21,10 @@ except ImportError:
 else:
     numpy_enabled = True
 
+_logger = getLogger(__file__)
+__null_hdlr = NullHandler()
+_logger.addHandler(__null_hdlr)
+
 
 class XPMLoader():
     """
@@ -27,55 +34,49 @@ class XPMLoader():
     ----------
     xpm_file: str or path-like object
         loaded file.
+    logger: None or logging.Logger
+        specify logger. if None, nothing will be logged.
 
     Returns
     -------
     None
     """
 
-    def __init__(self, xpm_file: Union[str, Path]):
-        if False:
-            with open(xpm_file) as f:
-                res = self.remove_comments(f)
+    def __init__(self, xpm_file: str | Path,
+                 logger: Logger | None = None):
+        if logger is None:
+            logger = _logger
+        self.logger = logger
+        shared_lib = 'src/xpm.so'
 
-            res = res[res.find('{')+1:res.rfind('}')]
-            res = eval("["+res+']')
-        else:
-            print(str(xpm_file))
-            lib = ctypes.cdll.LoadLibrary('src/xpm.so')
-            print(lib.add(2, 3))
+        if Path(shared_lib).is_file():
+            lib = ctypes.cdll.LoadLibrary(shared_lib)
             lib.loader.restype = ctypes.c_int
             lib.loader.argtypes = [ctypes.c_char_p,
                                    ctypes.POINTER(ctypes.POINTER(ctypes.c_char_p)),
-                                   ctypes.POINTER(ctypes.c_int),
-                                   ctypes.POINTER(ctypes.c_int),
                                    ]
             fbuf = ctypes.create_string_buffer(str(xpm_file).encode('utf-8'))
             data = ctypes.POINTER(ctypes.c_char_p)()
-            # data = ctypes.POINTER(ctypes.POINTER(ctypes.c_char_p))()
-            w = ctypes.POINTER(ctypes.c_int)()
-            h = ctypes.POINTER(ctypes.c_int)()
-            lib.loader(fbuf, data, w, h)
-            # print(data.contents)
-            # print(dir(data.contents))
-            # print(data.contents.value)
-            # print(data[0])
-            # print(data[11])
+            err = lib.loader(fbuf, data)
+            assert err == 0, f"{xpm_file}: failed to load xpm file (XpmReadFileToData)."
             info_list = [int(s) for s in data[0].decode('utf-8').split(' ')]
             # width = info_list[0]
             height = info_list[1]
             col_num = info_list[2]
-            res = [data[i].decode('utf-8') for i in range(height+col_num)]
-            print(res)
-            return
+            res = [data[i].decode('utf-8') for i in range(height+col_num+1)]
+        else:
+            with open(xpm_file) as f:
+                res_str = self.remove_comments(f)
+            res_str = res_str[res_str.find('{')+1:res_str.rfind('}')]
+            res = eval("["+res_str+']')
 
-        info_list = [int(s) for s in re.split(' +', res[0]) if s != '']
+        info_list = [int(s) for s in re.split('\s+', res[0]) if s != '']
         if len(info_list) == 4:
             width, height, colors, char_per_pixel = info_list
         elif len(info_list) == 6:
             width, height, colors, char_per_pixel, x_hot, y_hot = info_list
         else:
-            print(f'{xpm_file}: fail to load xpm file (color settings).',
+            print(f'{xpm_file}: failed to load xpm file (color settings).',
                   file=sys.stderr)
             return
         info = {
@@ -84,13 +85,13 @@ class XPMLoader():
                 'colors': colors,
                 'char_per_pixel': char_per_pixel
                 }
-        # print(width, height, colors, char_per_pixel)
+        self.logger.info(', '.join([f'{k}:{v}' for k, v in info.items()]))
 
         tmp_color_settings = res[1:colors+1]
-        color_settings: Dict[str, Dict[str, str]] = {}
+        color_settings: dict[str, dict[str, str]] = {}
         for cs in tmp_color_settings:
             char = cs[:char_per_pixel]
-            cs_tmp = re.split(' +', cs)
+            cs_tmp = re.split('\s+', cs)
             color_settings[char] = {}
             for i, c in enumerate(cs_tmp[1:]):
                 if c == 'c':
@@ -101,12 +102,16 @@ class XPMLoader():
                     color_settings[char]['mono'] = cs_tmp[i+1+1]
                 elif c == 'g':
                     color_settings[char]['gray'] = cs_tmp[i+1+1]
-        # print(color_settings)
+        self.logger.debug('color format:\n'+pformat(color_settings))
 
         body = res[colors+1:]
-        # print(body[:3])
-        assert height == len(body)
-        assert width*char_per_pixel == len(body[0])
+        self.logger.debug('body: \n' +
+                          '\n'.join([f' {i}: {body[i]}' for i in [0, 1, 2]]) +
+                          '\n......\n' +
+                          '\n'.join([f'{i}: {body[i]}' for i in [-3, -2, -1]])
+                          )
+        assert height == len(body), f"len of body ({len(body)}) should be the same as height ({height})."
+        assert width*char_per_pixel == len(body[0]), f"len of body[0] ({len(body[0])}) should be the same as width ({width*char_per_pixel})."
 
         self.file_name = xpm_file
         self.info = info
@@ -251,7 +256,7 @@ class XPMLoader():
             self.get_color_settings_full()
             color_setting = self.color_settings_full
 
-        self.vim_settings: List[Dict[str, str]] = []
+        self.vim_settings: list[dict[str, str]] = []
         for i, char in enumerate(color_setting):
             self.vim_settings.append({})
             if gui:
@@ -261,25 +266,25 @@ class XPMLoader():
             if col == 'NONE':
                 # get Normal highlight if possible.
                 hi_cmd = 'try | '
-                hi_cmd += 'highlight link Xpmcolor{:d} Normal | '.format(i)
-                hi_cmd += 'highlight Xpmcolor{:d} {}fg=bg | '.format(i, term)
+                hi_cmd += f'highlight link Xpmcolor{i} Normal | '
+                hi_cmd += f'highlight Xpmcolor{i} {term}fg=bg | '
                 hi_cmd += 'catch | '
-                hi_cmd += 'highlight Xpmcolor{:d} {}fg=NONE {}bg=NONE | '.format(i, term, term)
+                hi_cmd += f'highlight Xpmcolor{i} {term}fg=NONE {term}bg=NONE | '
                 hi_cmd += 'endtry'
             elif gui:
-                hi_cmd = 'highlight Xpmcolor{:d} {}fg={} {}bg={}'.format(i, term, col, term, col)
+                hi_cmd = f'highlight Xpmcolor{i} {term}fg={col} {term}bg={col}'
             else:
                 r = int(col[1:3], 16)
                 g = int(col[3:5], 16)
                 b = int(col[5:7], 16)
                 col = convert_fullcolor_to_256(r, g, b)
-                hi_cmd = 'highlight Xpmcolor{:d} {}fg={} {}bg={}'.format(i, term, col, term, col)
+                hi_cmd = f'highlight Xpmcolor{i} {term}fg={col} {term}bg={col}'
             self.vim_settings[-1]['highlight'] = hi_cmd
 
             for sp_char in "' \" $ . ~ ^ / [ ]".split(' '):
                 if sp_char in char:
                     char = char.replace(sp_char, '\\'+sp_char)
-            match_cmd = 'syntax match Xpmcolor{:d} /{}/ contained'.format(i, char)
+            match_cmd = f'syntax match Xpmcolor{i} /{char}/ contained'
             self.vim_settings[-1]['match'] = match_cmd
 
             match_cluster += 'Xpmcolor{:d},'.format(i)
@@ -290,8 +295,10 @@ class XPMLoader():
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     xpm_file = sys.argv[1]
+    if not Path(xpm_file).is_file():
+        print(f'file {xpm_file} is not found.')
+        exit()
     XPM = XPMLoader(xpm_file)
-    exit()
     XPM.xpm_to_ndarray()
     fig = plt.figure()
     ax = fig.add_subplot(111)
