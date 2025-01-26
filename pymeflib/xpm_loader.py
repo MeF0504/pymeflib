@@ -4,8 +4,12 @@ import sys
 from pathlib import Path
 from typing import Union, List, Dict
 from io import TextIOWrapper
+import ctypes
 
-from .color import convert_color_name, convert_fullcolor_to_256
+if __name__ == "__main__":
+    from pymeflib.color import convert_color_name, convert_fullcolor_to_256
+else:
+    from .color import convert_color_name, convert_fullcolor_to_256
 
 try:
     import numpy as np
@@ -30,11 +34,31 @@ class XPMLoader():
     """
 
     def __init__(self, xpm_file: Union[str, Path]):
-        with open(xpm_file) as f:
-            res = self.remove_comments(f)
+        if False:
+            with open(xpm_file) as f:
+                res = self.remove_comments(f)
 
-        res = res[res.find('{')+1:res.rfind('}')]
-        res = eval("["+res+']')
+            res = res[res.find('{')+1:res.rfind('}')]
+            res = eval("["+res+']')
+        else:
+            print(str(xpm_file))
+            lib = ctypes.cdll.LoadLibrary('src/xpm.so')
+            print(lib.add(2, 3))
+            lib.loader.restype = ctypes.c_int
+            lib.loader.argtypes = [ctypes.c_char_p,
+                                   ctypes.POINTER(ctypes.POINTER(ctypes.c_char_p)),
+                                   ctypes.POINTER(ctypes.c_int),
+                                   ctypes.POINTER(ctypes.c_int),
+                                   ]
+            fbuf = ctypes.create_string_buffer(str(xpm_file).encode('utf-8'))
+            data = ctypes.POINTER(ctypes.c_char_p)()
+            w = ctypes.POINTER(ctypes.c_int)()
+            h = ctypes.POINTER(ctypes.c_int)()
+            lib.loader(fbuf, data, w, h)
+            print(data.contents)
+            print(data.contents.value)
+            return
+
         info_list = [int(s) for s in re.split(' +', res[0]) if s != '']
         if len(info_list) == 4:
             width, height, colors, char_per_pixel = info_list
@@ -257,6 +281,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     xpm_file = sys.argv[1]
     XPM = XPMLoader(xpm_file)
+    exit()
     XPM.xpm_to_ndarray()
     fig = plt.figure()
     ax = fig.add_subplot(111)
