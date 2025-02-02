@@ -47,7 +47,7 @@ class XPMLoader():
         if logger is None:
             logger = _logger
         self.logger = logger
-        shared_lib = 'src/xpm.so'
+        shared_lib = 'lib/xpm.so'
 
         if Path(shared_lib).is_file():
             lib = ctypes.cdll.LoadLibrary(shared_lib)
