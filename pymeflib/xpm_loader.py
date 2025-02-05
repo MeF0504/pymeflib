@@ -38,24 +38,16 @@ else:
     __null_hdlr = NullHandler()
     _logger.addHandler(__null_hdlr)
 
-__update_lib = False
+_update_lib = False
 __src_dir = Path(__file__).parent/'src'
 SHARED_LIB = __src_dir/'lib/xpm.so'
 if not SHARED_LIB.parent.is_dir():
     SHARED_LIB.parent.mkdir()
-    __update_lib = True
+    _update_lib = True
 elif SHARED_LIB.is_file():
     if SHARED_LIB.stat().st_mtime < (__src_dir/'xpm_loader.c').stat().st_mtime:
         # source file is updated
-        __update_lib = True
-
-if __update_lib:
-    __cwd = Path.cwd().absolute()
-    if chk_cmd('make', return_path=False):
-        os.chdir(SHARED_LIB.parent.parent)
-        subprocess.run(['make', 'clean'])
-        subprocess.run(['make', 'xpm.so'])
-        os.chdir(__cwd)
+        _update_lib = True
 
 
 class XPMLoader():
@@ -79,6 +71,25 @@ class XPMLoader():
         if logger is None:
             logger = _logger
         self.logger = logger
+
+        if _update_lib:
+            cwd = Path.cwd().absolute()
+            if chk_cmd('make', return_path=False):
+                self.logger.info('make xpm loader.')
+                os.chdir(SHARED_LIB.parent.parent)
+                res = subprocess.run(['make', 'clean'], capture_output=True)
+                self.logger.debug('make clean:\n'
+                                  f'  stdout: {res.stdout.decode()}\n'
+                                  f'  stderr: {res.stderr.decode()}\n'
+                                  f'  return code: {res.returncode}'
+                                  )
+                res = subprocess.run(['make', 'xpm.so'], capture_output=True)
+                self.logger.debug('make lib:\n'
+                                  f'  stdout: {res.stdout.decode()}\n'
+                                  f'  stderr: {res.stderr.decode()}\n'
+                                  f'  return code: {res.returncode}'
+                                  )
+                os.chdir(cwd)
 
         if SHARED_LIB.is_file():
             self.logger.info('use shared library.')
