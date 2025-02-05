@@ -12,7 +12,7 @@ $(TARGET): $(SRCS)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBDIR) $(INCDIR)
 	
 $(OBJS): $(SRCS)
-	$(CC) $(SRCS) -shared -o ../lib/$(OBJS) $(CFLAGS) -fPIC $(LIBDIR) $(INCDIR)
+	$(CC) $(SRCS) -shared -o lib/$(OBJS) $(CFLAGS) -fPIC $(LIBDIR) $(INCDIR)
 all: clean $(OBJS) $(TARGET)
 clean:
-	-rm -f $(OBJS) $(TARGET) *.d
+	-rm -f lib/$(OBJS) $(TARGET) *.d

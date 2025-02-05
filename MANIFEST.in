@@ -1,1 +1,1 @@
-include pymeflib/color_set.json
+include pymeflib/color_set.json pymeflib/src/makefile pymeflib/src/xpm_loader.c

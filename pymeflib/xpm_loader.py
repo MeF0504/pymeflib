@@ -3,16 +3,21 @@ from __future__ import annotations
 
 import re
 import sys
+import os
 from pathlib import Path
+import subprocess
 from io import TextIOWrapper
 import ctypes
-from logging import getLogger, NullHandler, Logger
+from logging import (getLogger, NullHandler, StreamHandler, Logger,
+                     Formatter, INFO as logINFO)
 from pprint import pformat
 
 if __name__ == "__main__":
     from pymeflib.color import convert_color_name, convert_fullcolor_to_256
+    from pymeflib.util import chk_cmd
 else:
     from .color import convert_color_name, convert_fullcolor_to_256
+    from .util import chk_cmd
 
 try:
     import numpy as np
@@ -22,8 +27,35 @@ else:
     numpy_enabled = True
 
 _logger = getLogger(__file__)
-__null_hdlr = NullHandler()
-_logger.addHandler(__null_hdlr)
+if __name__ == "__main__":
+    _logger.setLevel(logINFO)
+    __st_hdlr = StreamHandler()
+    __st_hdlr.setLevel(logINFO)
+    __st_format = '>> %(levelname)-9s %(message)s'
+    __st_hdlr.setFormatter(Formatter(__st_format))
+    _logger.addHandler(__st_hdlr)
+else:
+    __null_hdlr = NullHandler()
+    _logger.addHandler(__null_hdlr)
+
+__update_lib = False
+__src_dir = Path(__file__).parent/'src'
+SHARED_LIB = __src_dir/'lib/xpm.so'
+if not SHARED_LIB.parent.is_dir():
+    SHARED_LIB.parent.mkdir()
+    __update_lib = True
+elif SHARED_LIB.is_file():
+    if SHARED_LIB.stat().st_mtime < (__src_dir/'xpm_loader.c').stat().st_mtime:
+        # source file is updated
+        __update_lib = True
+
+if __update_lib:
+    __cwd = Path.cwd().absolute()
+    if chk_cmd('make', return_path=False):
+        os.chdir(SHARED_LIB.parent.parent)
+        subprocess.run(['make', 'clean'])
+        subprocess.run(['make', 'xpm.so'])
+        os.chdir(__cwd)
 
 
 class XPMLoader():
@@ -47,10 +79,10 @@ class XPMLoader():
         if logger is None:
             logger = _logger
         self.logger = logger
-        shared_lib = Path(__file__).parent/'lib/xpm.so'
 
-        if shared_lib.is_file():
-            lib = ctypes.cdll.LoadLibrary(shared_lib)
+        if SHARED_LIB.is_file():
+            self.logger.info('use shared library.')
+            lib = ctypes.cdll.LoadLibrary(SHARED_LIB)
             lib.loader.restype = ctypes.c_int
             lib.loader.argtypes = [ctypes.c_char_p,
                                    ctypes.POINTER(ctypes.POINTER(ctypes.c_char_p)),
@@ -65,6 +97,7 @@ class XPMLoader():
             col_num = info_list[2]
             res = [data[i].decode('utf-8') for i in range(height+col_num+1)]
         else:
+            self.logger.info('use Python wrapper.')
             with open(xpm_file) as f:
                 res_str = self.remove_comments(f)
             res_str = res_str[res_str.find('{')+1:res_str.rfind('}')]
