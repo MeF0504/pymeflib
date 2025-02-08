@@ -1,5 +1,3 @@
-# vim: set noexpandtab
-#  https://zenn.dev/yagiyuki/articles/b5545c3b546bbeb662bf
 CC  = gcc
 CFLAGS  = -lXpm -lX11
 TARGET  = xpm_loader
@@ -16,3 +14,4 @@ $(OBJS): $(SRCS)
 all: clean $(OBJS) $(TARGET)
 clean:
 	-rm -f lib/$(OBJS) $(TARGET) *.d
+# vim: set noexpandtab

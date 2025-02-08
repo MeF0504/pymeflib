@@ -6,7 +6,7 @@ int loader(char *filename, char ***data)
     int err;
     err = XpmReadFileToData(filename, data);
     if( err ){
-        fprintf(stderr,"%s\n", XpmGetErrorString(err));
+        fprintf(stderr, "%s\n", XpmGetErrorString(err));
         return 1;
     }
     return 0;

@@ -27,16 +27,8 @@ else:
     numpy_enabled = True
 
 _logger = getLogger(__file__)
-if __name__ == "__main__":
-    _logger.setLevel(logINFO)
-    __st_hdlr = StreamHandler()
-    __st_hdlr.setLevel(logINFO)
-    __st_format = '>> %(levelname)-9s %(message)s'
-    __st_hdlr.setFormatter(Formatter(__st_format))
-    _logger.addHandler(__st_hdlr)
-else:
-    __null_hdlr = NullHandler()
-    _logger.addHandler(__null_hdlr)
+__null_hdlr = NullHandler()
+_logger.addHandler(__null_hdlr)
 
 _update_lib = False
 __src_dir = Path(__file__).parent/'src'
@@ -337,6 +329,12 @@ class XPMLoader():
 
 
 if __name__ == '__main__':
+    _logger.setLevel(logINFO)
+    __st_hdlr = StreamHandler()
+    __st_hdlr.setLevel(logINFO)
+    __st_format = '>> %(levelname)-9s %(message)s'
+    __st_hdlr.setFormatter(Formatter(__st_format))
+    _logger.addHandler(__st_hdlr)
     import matplotlib.pyplot as plt
     xpm_file = sys.argv[1]
     if not Path(xpm_file).is_file():
