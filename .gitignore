@@ -1,5 +1,9 @@
 # https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore
 
+# local files
+pymeflib/src/xpm_loader
+pymeflib/src/lib/xpm.so
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
