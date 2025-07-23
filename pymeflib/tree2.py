@@ -7,8 +7,9 @@ from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from typing import Callable, Type, Union
 from logging import getLogger, NullHandler, Logger
 
-branch_str = '|__ '
-branch_str2 = '|   '
+BRANCH_STR1 = '|__ '
+BRANCH_STR2 = '|   '
+BRANCH_STR0 = '    '
 
 GC = Callable[[PurePath], tuple[list[str], list[str]]]
 AddInfo = Callable[[Union[str, PurePath]], list[str]]
@@ -134,7 +135,7 @@ class TreeViewer():
                     tmp_path = tmp_path.parent
                     self.logger.debug(f'@ {tmp_path.parts}')
                     tmp_dirs, tmp_files = self.get_contents(tmp_path)
-                    self.logger.debug(f'find {cur_dir} in {tmp_dirs}')
+                    self.logger.debug(f'search {cur_dir} in {tmp_dirs}')
                     if cur_dir in tmp_dirs:
                         idx = tmp_dirs.index(cur_dir)
                         if idx+1 < len(tmp_dirs):
@@ -167,6 +168,19 @@ class TreeViewer():
             else:
                 print(f'{branch1}{branch1}|{" "*(L-1)}{pl}')
 
+    def _is_end(self) -> list[bool]:
+        # print(self.cpath, self.nextpath)
+        res = []
+        dirname = self.cpath.name
+        for p in self.cpath.parents:
+            dirs, files = self.get_contents(p)
+            if dirs[-1] == dirname:
+                res.append(True)
+            else:
+                res.append(False)
+            dirname = p.name
+        return res[::-1]
+
     def is_root(self, path: PurePath | None = None) -> bool:
         if path is None:
             path = self.cpath
@@ -189,7 +203,7 @@ class TreeViewer():
                 else:
                     add_info_pre, add_info_post = add_info(fullpath/f)
 
-                self._print_contents('', branch_str,
+                self._print_contents('', BRANCH_STR1,
                                      f, add_info_pre, add_info_post)
         else:
             if add_info is None:
@@ -197,9 +211,12 @@ class TreeViewer():
             else:
                 add_info_pre, add_info_post = add_info(fullpath)
 
-            dnum = len(self.cpath.parts)-1
-            self._print_contents(branch_str2*(dnum), branch_str,
-                                 self.cpath.name,
+            is_end = self._is_end()
+            self.logger.debug(f'is_end: {is_end}')
+            b_str1 = ''.join([BRANCH_STR0 if x else BRANCH_STR2
+                              for x in is_end[:-1]])
+            b_str2 = BRANCH_STR1
+            self._print_contents(b_str1, b_str2, self.cpath.name,
                                  add_info_pre, add_info_post)
             for f in files:
                 if add_info is None:
@@ -207,8 +224,11 @@ class TreeViewer():
                 else:
                     add_info_pre, add_info_post = add_info(fullpath/f)
 
-                self._print_contents(branch_str2*(dnum+1), branch_str,
-                                     f, add_info_pre, add_info_post)
+                b_str1 = ''.join([BRANCH_STR0 if x else BRANCH_STR2
+                                  for x in is_end])
+                b_str2 = BRANCH_STR1
+                self._print_contents(b_str1, b_str2, f,
+                                     add_info_pre, add_info_post)
 
 
 def show_tree(root: str, get_contents: GC,
@@ -257,7 +277,7 @@ if __name__ == '__main__':
 
     def add_info(cpath):
         if os.path.isdir(cpath):
-            return '', ''
+            return '', f' @_@ contents: {len(os.listdir(cpath))}'
         else:
             stat = os.stat(cpath)
             dt = datetime.fromtimestamp(stat.st_mtime)
