@@ -7,9 +7,9 @@ from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from typing import Callable, Type, Union
 from logging import getLogger, NullHandler, Logger
 
-branch_str = '|__ '
-branch_str2 = '|   '
-branch_str0 = '    '
+BRANCH_STR1 = '|__ '
+BRANCH_STR2 = '|   '
+BRANCH_STR0 = '    '
 
 GC = Callable[[PurePath], tuple[list[str], list[str]]]
 AddInfo = Callable[[Union[str, PurePath]], list[str]]
@@ -203,7 +203,7 @@ class TreeViewer():
                 else:
                     add_info_pre, add_info_post = add_info(fullpath/f)
 
-                self._print_contents('', branch_str,
+                self._print_contents('', BRANCH_STR1,
                                      f, add_info_pre, add_info_post)
         else:
             if add_info is None:
@@ -213,9 +213,10 @@ class TreeViewer():
 
             is_end = self._is_end()
             self.logger.debug(f'is_end: {is_end}')
-            b_str1 = ''.join([branch_str0 if x else branch_str2
+            b_str1 = ''.join([BRANCH_STR0 if x else BRANCH_STR2
                               for x in is_end[:-1]])
-            self._print_contents(b_str1, branch_str, self.cpath.name,
+            b_str2 = BRANCH_STR1
+            self._print_contents(b_str1, b_str2, self.cpath.name,
                                  add_info_pre, add_info_post)
             for f in files:
                 if add_info is None:
@@ -223,9 +224,10 @@ class TreeViewer():
                 else:
                     add_info_pre, add_info_post = add_info(fullpath/f)
 
-                b_str1 = ''.join([branch_str0 if x else branch_str2
+                b_str1 = ''.join([BRANCH_STR0 if x else BRANCH_STR2
                                   for x in is_end])
-                self._print_contents(b_str1, branch_str, f,
+                b_str2 = BRANCH_STR1
+                self._print_contents(b_str1, b_str2, f,
                                      add_info_pre, add_info_post)
 
 
@@ -275,7 +277,7 @@ if __name__ == '__main__':
 
     def add_info(cpath):
         if os.path.isdir(cpath):
-            return '', ''
+            return '', f' @_@ contents: {len(os.listdir(cpath))}'
         else:
             stat = os.stat(cpath)
             dt = datetime.fromtimestamp(stat.st_mtime)
