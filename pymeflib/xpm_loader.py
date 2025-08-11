@@ -10,7 +10,7 @@ from io import TextIOWrapper
 import ctypes
 from logging import (getLogger, NullHandler, StreamHandler, Logger,
                      Formatter, INFO as logINFO)
-from pprint import pformat
+from pprint import pformat, pprint
 
 if __name__ == "__main__":
     from pymeflib.color import convert_color_name, convert_fullcolor_to_256
@@ -214,6 +214,9 @@ class XPMLoader():
         -------
         None
         """
+        if hasattr(self, 'color_settings_full'):
+            self.logger.debug('color_settings_full is already set.')
+            return
         color_setting = self.color_settings
         color_settings_full = {}
         for char in color_setting:
@@ -229,6 +232,39 @@ class XPMLoader():
                 color_settings_full[char] = color_full
 
         self.color_settings_full = color_settings_full
+
+    def xpm_to_list(self) -> bool:
+        """
+        get list of xpm file.
+        "rgb_list" attribute will be added.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        bool
+            return True if rgb_list is added.
+        """
+        rgb_list = []
+        self.get_color_settings_full()
+        width = self.info['width']
+        height = self.info['height']
+        cpp = self.info['char_per_pixel']
+        for i in range(height):
+            rgb_list.append([])
+            for j in range(width):
+                char = self.body[i][j*cpp:(j+1)*cpp]
+                col_id = self.color_settings_full[char]
+                if col_id == 'none':
+                    rgb_list[i].append([0, 0, 0, 0])
+                else:
+                    r = int(col_id[1:3], 16)
+                    g = int(col_id[3:5], 16)
+                    b = int(col_id[5:7], 16)
+                    rgb_list[i].append([r, g, b, 255])
+
+        self.rgb_list = rgb_list
 
     def xpm_to_ndarray(self) -> bool:
         """
@@ -341,11 +377,19 @@ if __name__ == '__main__':
         print(f'file {xpm_file} is not found.')
         exit()
     XPM = XPMLoader(xpm_file)
+    pprint(XPM.info)
+    pprint(XPM.color_settings)
+    pprint(XPM.body)
+    XPM.xpm_to_list()
     XPM.xpm_to_ndarray()
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.imshow(XPM.ndarray)
-    ax.grid(False)
-    ax.set_xticks([])
-    ax.set_yticks([])
+    fig1 = plt.figure()
+    ax11 = fig1.add_subplot(211)
+    ax12 = fig1.add_subplot(212)
+    ax11.imshow(XPM.ndarray)
+    ax11.grid(False)
+    ax11.set_xticks([])
+    ax11.set_yticks([])
+    ax12.plot((XPM.ndarray-np.array(XPM.rgb_list)).flatten(), '.')
+    ax12.set_ylabel('ndarray - list')
+    ax12.set_xlabel('index')
     plt.show()
