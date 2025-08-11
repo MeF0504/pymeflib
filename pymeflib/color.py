@@ -87,7 +87,7 @@ def make_bitmap(filename: Union[str, Path], rgb: Any,
     ----------
     filename: str or pathlike-object
         name of saved file.
-    rgb: numpy.ndarray
+    rgb: array-like object
         image data.
         shape of this data is [width, height, color] and length of color is
         3 ([red, blue, green]) or 4 ([red, green, blue, alpha]).
@@ -106,10 +106,20 @@ def make_bitmap(filename: Union[str, Path], rgb: Any,
     """
     if logger is None:
         logger = __logger
-    if rgb.shape[-1] == 4:
-        rgb = rgb[:, :, [0, 1, 2]]
+    height = len(rgb)
+    width = len(rgb[0])
+    cols = len(rgb[0][0])
+    assert cols in [3, 4], \
+        f'length of rgb should be 3 or 4 (RGB or RGBA) (now {cols}).'
+    rgb_data = [[[0, 0, 0] for _ in range(width)] for _ in range(height)]
+    for i in range(height):
+        for j in range(width):
+            try:
+                rgb_data[i][j] = rgb[i][j][:3]
+            except IndexError:
+                raise IndexError(f'rgb[{i}, {j}] is out of range.'
+                                 f' (height: {height}, width: {width})')
 
-    height, width, cols = rgb.shape
     logger.info(f'{height}x{width}x{cols}')
     logger.info(f'bitmap type: {bmp_type}')
 
@@ -129,7 +139,7 @@ def make_bitmap(filename: Union[str, Path], rgb: Any,
     for i in range(height):
         line_data = []
         for j in range(width):
-            r, g, b = rgb[height-i-1, j]     # starts from left botom
+            r, g, b = rgb_data[height-i-1][j]     # starts from left botom
             line_data += [b, g, r]
         # line length should be a multiple of 4 bytes (long).
         padding = 4*(int((len(line_data)-1)/4)+1)-len(line_data)
