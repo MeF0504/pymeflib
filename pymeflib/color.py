@@ -139,8 +139,8 @@ def make_bitmap(filename: Union[str, Path], rgb: Any,
     for i in range(height):
         line_data = []
         for j in range(width):
-            r, g, b = rgb_data[height-i-1][j]     # starts from left botom
-            line_data += [b, g, r]
+            rd, gr, bl = rgb_data[height-i-1][j]     # starts from left botom
+            line_data += [bl, gr, rd]
         # line length should be a multiple of 4 bytes (long).
         padding = 4*(int((len(line_data)-1)/4)+1)-len(line_data)
         for k in range(padding):

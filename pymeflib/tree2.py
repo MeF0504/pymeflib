@@ -6,6 +6,9 @@ import warnings
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from typing import Callable, Type, Union
 from logging import getLogger, NullHandler, Logger
+from functools import partial
+
+from .color import FG, END
 
 BRANCH_STR1 = '|__ '
 BRANCH_STR2 = '|   '
@@ -93,8 +96,9 @@ class TreeViewer():
         self.nextpath: PurePath | None = None
         self.cnt = 0
         self.finish = False
-        self.get_contents = get_contents
+        self.get_contents = partial(self._gc, get_contents)
         self.maxcnt = -1
+        self.show_err = False
         if logger is None:
             _logger = getLogger(__name__)
             _null_hdlr = NullHandler()
@@ -181,6 +185,14 @@ class TreeViewer():
             dirname = p.name
         return res[::-1]
 
+    def _gc(self, get_contents: GC, path: PurePath):
+        dirs, files = get_contents(path)
+        if "." in dirs and not self.show_err:
+            print(f'{FG["r"]}Sorry TreeViewer does not treat "." directory correctly.{END}')
+            self.show_err = True
+        res_dirs = ['\\.' if d == '.' else d for d in dirs]
+        return res_dirs, files
+
     def is_root(self, path: PurePath | None = None) -> bool:
         if path is None:
             path = self.cpath
@@ -261,7 +273,6 @@ def show_tree(root: str, get_contents: GC,
 if __name__ == '__main__':
     import os
     from pathlib import Path
-    from functools import partial
     from datetime import datetime
 
     def get_contents(root, cpath):
