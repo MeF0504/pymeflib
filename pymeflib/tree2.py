@@ -99,6 +99,7 @@ class TreeViewer():
         self.get_contents = partial(self._gc, get_contents)
         self.maxcnt = -1
         self.show_err = False
+        self.finish_dir = set()
         if logger is None:
             _logger = getLogger(__name__)
             _null_hdlr = NullHandler()
@@ -127,6 +128,11 @@ class TreeViewer():
             # go down
             self.logger.debug(f'next: {dirs[0]}')
             self.nextpath = self.cpath/dirs[0]
+            # save info for self._is_end
+            fdir = self.cpath/dirs[-1]
+            if fdir not in self.finish_dir:
+                self.finish_dir.add(str(fdir))
+                self.logger.debug(f'add {fdir}')
         else:
             # go up
             tmp_path = self.cpath
@@ -177,8 +183,7 @@ class TreeViewer():
         res = []
         dirname = self.cpath.name
         for p in self.cpath.parents:
-            dirs, files = self.get_contents(p)
-            if dirs[-1] == dirname:
+            if str(p/dirname) in self.finish_dir:
                 res.append(True)
             else:
                 res.append(False)
