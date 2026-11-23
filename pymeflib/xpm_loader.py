@@ -26,20 +26,7 @@ except ImportError:
 else:
     numpy_enabled = True
 
-_logger = getLogger(__file__)
-__null_hdlr = NullHandler()
-_logger.addHandler(__null_hdlr)
-
-_update_lib = False
-__src_dir = Path(__file__).parent/'src'
-SHARED_LIB = __src_dir/'lib/xpm.so'
-if not SHARED_LIB.parent.is_dir():
-    SHARED_LIB.parent.mkdir()
-    _update_lib = True
-elif SHARED_LIB.is_file():
-    if SHARED_LIB.stat().st_mtime < (__src_dir/'xpm_loader.c').stat().st_mtime:
-        # source file is updated
-        _update_lib = True
+SHARED_LIB = Path(__file__).parent/'src/lib/xpm.so'
 
 
 class XPMLoader():
@@ -61,31 +48,16 @@ class XPMLoader():
     def __init__(self, xpm_file: str | Path,
                  logger: Logger | None = None):
         if logger is None:
-            logger = _logger
-        self.logger = logger
+            self.logger = self.__set_logger()
+        else:
+            self.logger = logger
 
-        if _update_lib:
-            cwd = Path.cwd().absolute()
-            if chk_cmd('make', return_path=False):
-                self.logger.info('make xpm loader.')
-                os.chdir(SHARED_LIB.parent.parent)
-                res = subprocess.run(['make', 'clean'], capture_output=True)
-                self.logger.debug('make clean:\n'
-                                  f'  stdout: {res.stdout.decode()}\n'
-                                  f'  stderr: {res.stderr.decode()}\n'
-                                  f'  return code: {res.returncode}'
-                                  )
-                res = subprocess.run(['make', 'xpm.so'], capture_output=True)
-                self.logger.debug('make lib:\n'
-                                  f'  stdout: {res.stdout.decode()}\n'
-                                  f'  stderr: {res.stderr.decode()}\n'
-                                  f'  return code: {res.returncode}'
-                                  )
-                os.chdir(cwd)
+        if self.__check_update():
+            self.__update_lib()
 
         if SHARED_LIB.is_file():
-            self.logger.info('use shared library.')
-            lib = ctypes.cdll.LoadLibrary(SHARED_LIB)
+            self.logger.info(f'use shared library @ {SHARED_LIB}.')
+            lib = ctypes.cdll.LoadLibrary(str(SHARED_LIB))
             lib.loader.restype = ctypes.c_int
             lib.loader.argtypes = [ctypes.c_char_p,
                                    ctypes.POINTER(ctypes.POINTER(ctypes.c_char_p)),
@@ -93,7 +65,8 @@ class XPMLoader():
             fbuf = ctypes.create_string_buffer(str(xpm_file).encode('utf-8'))
             data = ctypes.POINTER(ctypes.c_char_p)()
             err = lib.loader(fbuf, data)
-            assert err == 0, f"{xpm_file}: failed to load xpm file (XpmReadFileToData)."
+            assert err == 0, \
+                f"{xpm_file}: failed to load xpm file (XpmReadFileToData)."
             info_list = [int(s) for s in data[0].decode('utf-8').split(' ')]
             # width = info_list[0]
             height = info_list[1]
@@ -102,7 +75,7 @@ class XPMLoader():
         else:
             self.logger.info('use Python wrapper.')
             with open(xpm_file) as f:
-                res_str = self.remove_comments(f)
+                res_str = self.__remove_comments(f)
             res_str = res_str[res_str.find('{')+1:res_str.rfind('}')]
             res = eval("["+res_str+']')
 
@@ -154,7 +127,7 @@ class XPMLoader():
         self.color_settings = color_settings
         self.body = body
 
-    def remove_comments(self, fileobj: TextIOWrapper) -> str:
+    def __remove_comments(self, fileobj: TextIOWrapper) -> str:
         """
         remove comments in the xpm file.
 
@@ -202,6 +175,44 @@ class XPMLoader():
             res += tmpline
         return res
 
+    def __set_logger(self) -> Logger:
+        logger = getLogger(__file__)
+        null_hdlr = NullHandler()
+        logger.addHandler(null_hdlr)
+        return logger
+
+    def __check_update(self) -> bool:
+        if not SHARED_LIB.parent.is_dir():
+            SHARED_LIB.parent.mkdir()
+            return True
+        elif SHARED_LIB.is_file():
+            lib_mtime = SHARED_LIB.stat().st_mtime
+            src_mtime = (SHARED_LIB.parent.parent/'xpm_loader.c').stat().st_mtime
+            if lib_mtime < src_mtime:
+                # source file is updated
+                return True
+
+        return False
+
+    def __update_lib(self) -> None:
+        cwd = Path.cwd().absolute()
+        if chk_cmd('make', return_path=False):
+            self.logger.info('make xpm loader.')
+            os.chdir(SHARED_LIB.parent.parent)
+            res = subprocess.run(['make', 'clean'], capture_output=True)
+            self.logger.debug('make clean:\n'
+                              f'  stdout: {res.stdout.decode()}\n'
+                              f'  stderr: {res.stderr.decode()}\n'
+                              f'  return code: {res.returncode}'
+                              )
+            res = subprocess.run(['make', 'xpm.so'], capture_output=True)
+            self.logger.debug('make lib:\n'
+                              f'  stdout: {res.stdout.decode()}\n'
+                              f'  stderr: {res.stderr.decode()}\n'
+                              f'  return code: {res.returncode}'
+                              )
+            os.chdir(cwd)
+
     def get_color_settings_full(self) -> None:
         """
         get color settings for full-color.
@@ -246,7 +257,7 @@ class XPMLoader():
         bool
             return True if rgb_list is added.
         """
-        rgb_list = []
+        rgb_list: list[list[list[int]]] = []
         self.get_color_settings_full()
         width = self.info['width']
         height = self.info['height']
@@ -265,6 +276,7 @@ class XPMLoader():
                     rgb_list[i].append([r, g, b, 255])
 
         self.rgb_list = rgb_list
+        return True
 
     def xpm_to_ndarray(self) -> bool:
         """
@@ -365,12 +377,16 @@ class XPMLoader():
 
 
 if __name__ == '__main__':
-    _logger.setLevel(logINFO)
-    __st_hdlr = StreamHandler()
-    __st_hdlr.setLevel(logINFO)
-    __st_format = '>> %(levelname)-9s %(message)s'
-    __st_hdlr.setFormatter(Formatter(__st_format))
-    _logger.addHandler(__st_hdlr)
+    def set_logger() -> Logger:
+        logger = getLogger(__file__)
+        logger.setLevel(logINFO)
+        st_hdlr = StreamHandler()
+        st_hdlr.setLevel(logINFO)
+        st_format = '>> %(levelname)-9s %(message)s'
+        st_hdlr.setFormatter(Formatter(st_format))
+        logger.addHandler(st_hdlr)
+        return logger
+
     import matplotlib.pyplot as plt
     xpm_file = sys.argv[1]
     if not Path(xpm_file).is_file():
@@ -382,6 +398,7 @@ if __name__ == '__main__':
     pprint(XPM.body)
     XPM.xpm_to_list()
     XPM.xpm_to_ndarray()
+
     fig1 = plt.figure()
     ax11 = fig1.add_subplot(211)
     ax12 = fig1.add_subplot(212)
