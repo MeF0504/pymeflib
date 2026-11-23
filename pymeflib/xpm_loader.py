@@ -39,6 +39,8 @@ class XPMLoader():
         loaded file.
     logger: None or logging.Logger
         specify logger. if None, nothing will be logged.
+    update: bool
+        if True, force an update to the shared library.
 
     Returns
     -------
@@ -46,13 +48,16 @@ class XPMLoader():
     """
 
     def __init__(self, xpm_file: str | Path,
-                 logger: Logger | None = None):
+                 logger: Logger | None = None,
+                 update: bool = False):
         if logger is None:
             self.logger = self.__set_logger()
         else:
             self.logger = logger
 
         if self.__check_update():
+            self.__update_lib()
+        elif update:
             self.__update_lib()
 
         if SHARED_LIB.is_file():
@@ -392,7 +397,7 @@ if __name__ == '__main__':
     if not Path(xpm_file).is_file():
         print(f'file {xpm_file} is not found.')
         exit()
-    XPM = XPMLoader(xpm_file)
+    XPM = XPMLoader(xpm_file, logger=set_logger(), update=False)
     pprint(XPM.info)
     pprint(XPM.color_settings)
     pprint(XPM.body)
